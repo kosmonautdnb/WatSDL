@@ -15,3 +15,6 @@ https://github.com/opentyrian/opentyrian.git
 It's also running with Watcom C++ 11 (the one before OpenWatcom).
 
 **You need PMODEW(in the zip) instead of Dos4gw in order to get the keyboard working**
+
+This repository lives at:  
+https://github.com/kosmonautdnb/WatSDL
