@@ -9,4 +9,7 @@ OpenTyrian is compiling and running with it already.
 
 OpenTyrian source code and compile instructions are in tyrian.zip.  
 
+OpenTyrians original repository:  
+https://github.com/opentyrian/opentyrian.git
+
 It's also running with Watcom C++ 11 (the one before OpenWatcom).
