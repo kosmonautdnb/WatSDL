@@ -7,4 +7,6 @@ But wait:
 
 OpenTyrian is compiling and running with it already.  
 
-OpenTyrian source code and compile instructions are in tyrian.zip 
+OpenTyrian source code and compile instructions are in tyrian.zip.  
+
+It's also running with Watcom C++ 11 (the one before OpenWatcom).
