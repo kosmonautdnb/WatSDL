@@ -13,7 +13,7 @@ extern "C" {
 typedef void (__interrupt __far* KeyboardHandler)();
 static KeyboardHandler oldKeyboardHandler = NULL;
 
-bool keyPressed[0x80] = {0};
+Uint8 keyPressed[0x80] = {0};
 
 bool isKeyPressed(int scanCode) {
   return keyPressed[scanCode & 0x7f];
@@ -60,6 +60,21 @@ void installKeyboardHandler() {
 
 unsigned int sdl_initialized = 0;
 
+SDL_MessageBoxButtonData _SDL_MessageBoxButtonData(int flags, int buttonid, const char *text) {
+  SDL_MessageBoxButtonData r; r.flags = flags; r.buttonid = buttonid; r.text = text; return r;
+}
+
+SDL_Result SDL_ShowMessageBox(SDL_MessageBoxData *a, int *b) {
+  return SDL_ERROR;
+}
+
+SDL_Result SDL_ShowSimpleMessageBox(int flags, const char *title, const char *message, SDL_Window *window) {
+  return SDL_ERROR;
+}
+
+void SDL_Log(const char *a) {;}
+void SDL_GetVersion(SDL_version *a) {a->minor = SDL_MINOR_VERSION;a->major = SDL_MAJOR_VERSION;a->patch = SDL_PATCHLEVEL;}
+
 unsigned short SDL_SwapLE16(unsigned short a) {
   return a;
 }
@@ -70,6 +85,14 @@ unsigned int SDL_SwapLE32(unsigned int a) {
 
 int snprintf(char *buffer, const int size, const char *format, ...) {
   return sprintf(buffer,format); // :mad: todo
+}
+
+char *SDL_GetPrefPath(const char *a, const char *b) {
+  return ".";
+}
+
+char *SDL_GetBasePath() {
+  return ".";
 }
 
 SDL_Result SDL_Init(int flags) {
@@ -90,6 +113,10 @@ SDL_Result SDL_InitSubSystem(int flags) {
 }
 
 void SDL_QuitSubSystem(int flags) {
+}
+
+void SDL_free(void *a) {
+  free(a);
 }
 
 int SDL_GetNumVideoDisplays() {
@@ -182,6 +209,10 @@ const char *SDL_JoystickName(SDL_Joystick *a) {
   return NULL;
 }
 
+const char *SDL_JoystickNameForIndex(int a) {
+  return NULL;
+}
+
 int SDL_JoystickNumAxes(SDL_Joystick *a) {
   return 0;
 }
@@ -194,6 +225,21 @@ int SDL_JoystickNumHats(SDL_Joystick *a) {
   return 0;
 }
 
+SDL_GameController *SDL_GameControllerOpen(int a) {
+  return 0;
+}
+
+int SDL_GameControllerGetButton(SDL_GameController *a,int b) {
+  return 0;
+}
+
+int SDL_GameControllerGetAxis(SDL_GameController *a,int b) {
+  return 0;
+}
+
+void SDL_GameControllerClose(SDL_GameController *a) {
+}
+
 int SDL_GetTicks() {
   return (int)(glSeconds()*1000.0);
 }
@@ -201,7 +247,23 @@ int SDL_GetTicks() {
 SDL_Event events[256];
 int currentEvent=0;
 
-bool keyPressed_last[0x80] = {0};
+Uint8 keyPressed_last[0x80] = {0};
+
+Uint8 *SDL_GetKeyboardState(void *a) {
+  return keyPressed;
+}
+
+void SDL_ResetKeyboard() {
+  memset(keyPressed_last,0,sizeof(keyPressed_last));
+  memset(keyPressed,0,sizeof(keyPressed));
+}
+
+const char *SDL_GetKeyName(SDL_KeyCode a) {
+  static char buffer[2];
+  buffer[1] = 0;
+  buffer[0] = (int)a & 255;
+  return buffer;
+}
 
 void addKeyboardEvents() {
   int key = glNextKey();
@@ -302,6 +364,13 @@ bool SDL_PollEvent(SDL_Event *e) {
   return true;
 }
 
+bool SDL_WaitEvent(SDL_Event *e) {
+  return SDL_PollEvent(e);
+}
+
+void SDL_EventState(SDL_EventType a, int b) {
+}
+
 int SDL_GetError() {
   return 0;
 }
@@ -372,6 +441,14 @@ SDL_Surface *SDL_CreateRGBSurface(int a, int w, int h, int cl, int d, int e, int
   return r;
 }
 
+SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int w, int h, int bpp, int pitch, int rmask, int gmask, int bmask, int amask) {
+  return NULL;
+}
+
+SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *a, SDL_Surface *b) {
+  return NULL;
+}
+
 void SDL_FreeSurface(SDL_Surface *a) {
   if (a!=NULL) {
     RDELETE(a->pixels);
@@ -396,6 +473,9 @@ SDL_Window *SDL_CreateWindow(const char *windowName,int posX, int posY, int w, i
   return r;
 }
 
+void SDL_SetWindowIcon(SDL_Window *window, SDL_Surface *icon) {
+}
+
 void SDL_DestroyWindow(SDL_Window *a) {
   RDELETE(a);
 }
@@ -403,6 +483,10 @@ void SDL_DestroyWindow(SDL_Window *a) {
 void SDL_GetWindowSize(SDL_Window *a, int *w, int *h) {
   if (w != NULL) *w = a->w;
   if (h != NULL) *h = a->h;
+}
+
+int SDL_GetWindowFlags(SDL_Window *a) {
+  return a->flags;
 }
 
 void SDL_SetWindowPosition(SDL_Window *a, int x, int y) {
@@ -436,6 +520,20 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window *a, int b, int c) {
   r->window = a;
   return r;
 }
+                                            
+void SDL_SetRenderTarget(SDL_Renderer *a, SDL_Texture *b) {
+  a->renderTarget = b;
+}
+
+void SDL_GetRendererOutputSize(SDL_Renderer *a, int *w, int *h) {
+  if (a != NULL & w != NULL && a->window != NULL) *w = a->window->w;
+  if (a != NULL & h != NULL && a->window != NULL) *h = a->window->h;
+}
+
+void SDL_RenderSetLogicalSize(SDL_Renderer *a, int w, int h) {
+  a->logical_w = w;
+  a->logical_h = h;
+}
 
 void SDL_DestroyRenderer(SDL_Renderer *a) {
   RDELETE(a);
@@ -466,7 +564,42 @@ void SDL_LockTexture(SDL_Texture *t, void *a, void **data, int *pitch) {
   if (pitch != NULL) *pitch = t->pitch;
 }
 
+SDL_Result SDL_UpdateTexture(SDL_Texture *t, const void *a, const void *pixels, int pitch) {
+  int dx0 = 0;
+  int dy0 = 0;
+  int dx1 = t->w;
+  int dy1 = t->h;
+  int sx0 = dx0;
+  int sy0 = dy0;
+  int sx1 = dx1;
+  int sy1 = dy1;
+  Uint8 *s = (Uint8*)pixels;
+  Uint8 *d = (Uint8*)t->pixels;
+  s += sx0*4+sy0*pitch;
+  d += dx0*4+dy0*t->pitch;
+  for (int y = dy0; y < dy1; y++) {
+    Uint32 *s2 = (Uint32*)s;
+    Uint32 *d2 = (Uint32*)d;
+    for (int x = dx0; x < dx1; x++) {
+      *d2=*s2;
+      s2++;
+      d2++;
+    }
+    s += pitch;
+    d += t->pitch;
+  }
+  return SDL_OK;
+}
+
 void SDL_UnlockTexture(SDL_Texture *t) {
+}
+
+void SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode b) {
+  texture->blendMode = b;
+}
+
+void SDL_SetTextureAlphaMod(SDL_Texture *texture, int b) {
+  texture->modMode = b;
 }
 
 SDL_PixelFormat *SDL_AllocFormat(unsigned int a) {
@@ -494,26 +627,38 @@ void SDL_RenderPresent(SDL_Renderer *a) {
   glRefresh();
 }
 
-void SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect *dst_rect) {
-  if (glFrameBuffer == NULL) return;
-  if (glFrameBufferWidth != r->window->w) return;
-  if (glFrameBufferHeight != r->window->h) return;
+int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect *dst_rect) {
+  if (glFrameBuffer == NULL) return SDL_ERROR;
+  if (glFrameBufferWidth != r->window->w) return SDL_ERROR;
+  if (glFrameBufferHeight != r->window->h) return SDL_ERROR;
   int sx0 = 0;
   int sy0 = 0;
   int sx1 = sx0+t->w;
   int sy1 = sy0+t->h;
-  int dx0 = dst_rect->x;
-  int dy0 = dst_rect->y;
-  int dx1 = dx0+dst_rect->w;
-  int dy1 = dy0+dst_rect->h;
+  int dx0 = dx0;
+  int dy0 = dy0;
+  int dx1 = dx1;
+  int dy1 = dy1;
+  if (src_rect != NULL) {
+    sx0 = src_rect->x;
+    sy0 = src_rect->y;
+    sx1 = sx0+src_rect->w;
+    sy1 = sy0+src_rect->h;
+  }
+  if (dst_rect != NULL) {
+    dx0 = dst_rect->x;
+    dy0 = dst_rect->y;
+    dx1 = dx0+dst_rect->w;
+    dy1 = dy0+dst_rect->h;
+  }
   int minx = 0;
   int miny = 0;
   int maxx = r->window->w;
   int maxy = r->window->h;
-  if (dx0>=maxx) return;
-  if (dx1<=minx) return;
-  if (dy0>=maxy) return;
-  if (dy1<=miny) return;
+  if (dx0>=maxx) return SDL_ERROR;
+  if (dx1<=minx) return SDL_ERROR;
+  if (dy0>=maxy) return SDL_ERROR;
+  if (dy1<=miny) return SDL_ERROR;
   if (dx0<minx) {
     sx0 += minx-dx0;
     dx0 = minx;
@@ -541,10 +686,46 @@ void SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rec
       }
     }
   }
+  return SDL_OK;
 }
 
 const char *SDL_GetPixelFormatName(unsigned int a) {
   return "";
+}
+
+bool SDL_HasClipboardText() {
+  return false;
+}
+
+char *SDL_GetClipboardText() {
+  return "";
+}
+
+bool SDL_HasScreenKeyboardSupport() {
+  return false;
+}
+
+void SDL_SaveBMP(SDL_Surface *a, const char *path) {
+}
+
+const char *SDL_GetCurrentVideoDriver() {
+  return "WatcomGL";
+}
+
+const char *SDL_GetCurrentAudioDriver() {
+  return "AudioSilence";
+}
+
+SDL_Result SDL_RenderReadPixels(SDL_Renderer *a, int b, SDL_PixelFormatEnum format, void *pixels, int pitch) {
+  return SDL_ERROR;
+}
+
+SDL_RWops *SDL_RWFromMem(void *a, int b) {
+  return NULL;
+}
+
+SDL_Surface *SDL_LoadBMP_RW(SDL_RWops *a,int b) {
+  return NULL;
 }
 
 #ifdef __cplusplus

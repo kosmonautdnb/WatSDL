@@ -5,8 +5,13 @@
 #ifndef __SDL_H__
 #define __SDL_H__
 
+#define SDL_MAJOR_VERSION 2
+#define SDL_MINOR_VERSION 32
+#define SDL_PATCHLEVEL 10
+
 #include <direct.h>
 #include <math.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,9 +89,13 @@ typedef struct SDL_GUID {
     Uint8 data[16];
 } SDL_GUID;
 
-#define SDL_MAJOR_VERSION 2
-#define SDL_MINOR_VERSION 32
-#define SDL_PATCHLEVEL 10
+typedef struct SDL_version {
+  int minor;
+  int major;
+  int patch;
+} SDL_version;
+void SDL_GetVersion(SDL_version *a);
+
 #define SDL_VERSION_ATLEAST(__m0__, __m1__, __m2__) ((SDL_MAJOR_VERSION>=(__m0__))&&(SDL_MINOR_VERSION>=(__m1__))&&(SDL_PATCHLEVEL>=(__m2__)))
 #define SDL_LIL_ENDIAN  1234
 #define SDL_BIG_ENDIAN  4321
@@ -110,6 +119,14 @@ unsigned int SDL_SwapLE32(unsigned int a);
 #define SDL_INIT_SENSOR 0x00008000
 #define SDL_INIT_NOPARACHUTE 0x00100000
 #define SDL_INIT_EVERYTHING (SDL_INIT_TIMER|SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_JOYSTICK|SDL_INIT_HAPTIC|SDL_INIT_GAMECONTROLLER|SDL_INIT_SENSOR)
+
+typedef enum SDL_RendererFlags
+{
+    SDL_RENDERER_SOFTWARE = 0x00000001,
+    SDL_RENDERER_ACCELERATED = 0x00000002,
+    SDL_RENDERER_PRESENTVSYNC = 0x00000004,
+    SDL_RENDERER_TARGETTEXTURE = 0x00000008
+} SDL_RendererFlags;
 
 #define SCANCODE_ESCAPE 1
 #define SCANCODE_1 2
@@ -320,6 +337,8 @@ typedef unsigned int SDL_Scancode;
 #define SDL_SCANCODE_SLASH 0 // :mad: not defined
 #define SDL_SCANCODE_DELETE SCANCODE_DELETE
 #define SDL_SCANCODE_GRAVE SCANCODE_DOT
+#define SDL_SCANCODE_APOSTROPHE SCANCODE_UPPERDOT
+#define SDL_SCANCODE_PRIOR SCANCODE_HASHTAG // :mad: dunno why it's hashtag
 
 
 #define SDL_SCANCODE_TO_KEYCODE(__x__) ((__x__)|(1<<30))
@@ -440,8 +459,16 @@ typedef enum SDL_KeyCode
     SDLK_KP_9 = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_9),
     SDLK_KP_0 = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_0),
     SDLK_KP_PERIOD = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_PERIOD),
+    SDLK_LCTRL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LCTRL),
+    SDLK_LSHIFT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LSHIFT),
+    SDLK_LALT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LALT),
+    SDLK_RCTRL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RCTRL),
+    SDLK_RSHIFT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RSHIFT),
+    SDLK_RALT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RALT),
 /*    SDLK_APPLICATION = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_APPLICATION),
     SDLK_POWER = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_POWER),
+    SDLK_LGUI = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LGUI),
+    SDLK_RGUI = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RGUI),
     SDLK_KP_EQUALS = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_EQUALS),
     SDLK_F13 = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F13),
     SDLK_F14 = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F14),
@@ -529,14 +556,6 @@ typedef enum SDL_KeyCode
     SDLK_KP_OCTAL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_OCTAL),
     SDLK_KP_DECIMAL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_DECIMAL),
     SDLK_KP_HEXADECIMAL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_HEXADECIMAL),
-    SDLK_LCTRL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LCTRL),
-    SDLK_LSHIFT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LSHIFT),
-    SDLK_LALT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LALT),
-    SDLK_LGUI = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LGUI),
-    SDLK_RCTRL = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RCTRL),
-    SDLK_RSHIFT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RSHIFT),
-    SDLK_RALT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RALT),
-    SDLK_RGUI = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RGUI),
     SDLK_MODE = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MODE),
     SDLK_AUDIONEXT = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AUDIONEXT),
     SDLK_AUDIOPREV = SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AUDIOPREV),
@@ -863,7 +882,51 @@ typedef struct SDL_AudioSpec {
   int channels;
   int samples;
   SDL_AUDIOCALLBACK callback;
+  bool silence;
+  void *userdata;
+  int size; 
 } SDL_AudioSpec;
+
+#define SDL_RWOPS_UNKNOWN 0
+#define SDL_RWOPS_WINFILE 1
+#define SDL_RWOPS_STDFILE 2
+#define SDL_RWOPS_JNIFILE 3
+#define SDL_RWOPS_MEMORY 4
+#define SDL_RWOPS_MEMORY_RO 5
+
+typedef struct SDL_RWops {
+    Uint32 type;
+    union
+    {
+        struct
+        {
+            SDL_bool append;
+            void *h;
+            struct
+            {
+                void *data;
+                size_t size;
+                size_t left;
+            } buffer;
+        } windowsio;
+        struct
+        {
+            SDL_bool autoclose;
+            FILE *fp;
+        } stdio;
+        struct
+        {
+            Uint8 *base;
+            Uint8 *here;
+            Uint8 *stop;
+        } mem;
+        struct
+        {
+            void *data1;
+            void *data2;
+        } unknown;
+    } hidden;
+} SDL_RWops;
 
 typedef struct SDL_Point
 {
@@ -1021,6 +1084,7 @@ typedef struct SDL_Renderer {
   // :mad: a lot is missing here
   const void *magic;
   SDL_Window *window;
+  struct SDL_Texture *renderTarget; // :mad: added
   SDL_bool hidden;
   SDL_bool wanted_vsync;
   SDL_bool simulate_vsync;
@@ -1211,8 +1275,137 @@ typedef struct SDL_Joystick
     struct _SDL_JoystickDriver *driver;
     struct joystick_hwdata *hwdata;
     int ref_count;
-    struct _SDL_Joystick *next;
+    struct SDL_Joystick *next;
 } SDL_Joystick;
+
+typedef enum SDL_GameControllerButton
+{
+    SDL_CONTROLLER_BUTTON_INVALID = -1,
+    SDL_CONTROLLER_BUTTON_A,
+    SDL_CONTROLLER_BUTTON_B,
+    SDL_CONTROLLER_BUTTON_X,
+    SDL_CONTROLLER_BUTTON_Y,
+    SDL_CONTROLLER_BUTTON_BACK,
+    SDL_CONTROLLER_BUTTON_GUIDE,
+    SDL_CONTROLLER_BUTTON_START,
+    SDL_CONTROLLER_BUTTON_LEFTSTICK,
+    SDL_CONTROLLER_BUTTON_RIGHTSTICK,
+    SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+    SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    SDL_CONTROLLER_BUTTON_DPAD_UP,
+    SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+    SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+    SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    SDL_CONTROLLER_BUTTON_MISC1,
+    SDL_CONTROLLER_BUTTON_PADDLE1,
+    SDL_CONTROLLER_BUTTON_PADDLE2,
+    SDL_CONTROLLER_BUTTON_PADDLE3,
+    SDL_CONTROLLER_BUTTON_PADDLE4,
+    SDL_CONTROLLER_BUTTON_TOUCHPAD,
+    SDL_CONTROLLER_BUTTON_MAX
+} SDL_GameControllerButton;
+
+typedef enum SDL_GameControllerType
+{
+    SDL_CONTROLLER_TYPE_UNKNOWN = 0,
+    SDL_CONTROLLER_TYPE_XBOX360,
+    SDL_CONTROLLER_TYPE_XBOXONE,
+    SDL_CONTROLLER_TYPE_PS3,
+    SDL_CONTROLLER_TYPE_PS4,
+    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO,
+    SDL_CONTROLLER_TYPE_VIRTUAL,
+    SDL_CONTROLLER_TYPE_PS5,
+    SDL_CONTROLLER_TYPE_AMAZON_LUNA,
+    SDL_CONTROLLER_TYPE_GOOGLE_STADIA,
+    SDL_CONTROLLER_TYPE_NVIDIA_SHIELD,
+    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_LEFT,
+    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT,
+    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_PAIR,
+    SDL_CONTROLLER_TYPE_MAX
+} SDL_GameControllerType;
+
+typedef enum
+{
+    SDL_CONTROLLER_MAPPING_PRIORITY_DEFAULT,
+    SDL_CONTROLLER_MAPPING_PRIORITY_API,
+    SDL_CONTROLLER_MAPPING_PRIORITY_USER,
+} SDL_ControllerMappingPriority;
+
+typedef struct _ControllerMapping_t
+{
+    SDL_JoystickGUID guid;
+    char *name;
+    char *mapping;
+    SDL_ControllerMappingPriority priority;
+    struct _ControllerMapping_t *next;
+} ControllerMapping_t;
+
+typedef enum SDL_GameControllerBindType
+{
+    SDL_CONTROLLER_BINDTYPE_NONE = 0,
+    SDL_CONTROLLER_BINDTYPE_BUTTON,
+    SDL_CONTROLLER_BINDTYPE_AXIS,
+    SDL_CONTROLLER_BINDTYPE_HAT
+} SDL_GameControllerBindType;
+
+typedef enum SDL_GameControllerAxis
+{
+    SDL_CONTROLLER_AXIS_INVALID = -1,
+    SDL_CONTROLLER_AXIS_LEFTX,
+    SDL_CONTROLLER_AXIS_LEFTY,
+    SDL_CONTROLLER_AXIS_RIGHTX,
+    SDL_CONTROLLER_AXIS_RIGHTY,
+    SDL_CONTROLLER_AXIS_TRIGGERLEFT,
+    SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
+    SDL_CONTROLLER_AXIS_MAX
+} SDL_GameControllerAxis;
+
+typedef struct
+{
+    SDL_GameControllerBindType inputType;
+    union
+    {
+        int button;
+        struct
+        {
+            int axis;
+            int axis_min;
+            int axis_max;
+        } axis;
+        struct
+        {
+            int hat;
+            int hat_mask;
+        } hat;
+    } input;
+    SDL_GameControllerBindType outputType;
+    union
+    {
+        SDL_GameControllerButton button;
+        struct
+        {
+            SDL_GameControllerAxis axis;
+            int axis_min;
+            int axis_max;
+        } axis;
+    } output;
+} SDL_ExtendedGameControllerBind;
+
+typedef struct SDL_GameController
+{
+    void *magic;
+    SDL_Joystick *joystick;
+    int ref_count;
+    const char *name;
+    SDL_GameControllerType type;
+    ControllerMapping_t *mapping;
+    int num_bindings;
+    SDL_ExtendedGameControllerBind *bindings;
+    SDL_ExtendedGameControllerBind **last_match_axis;
+    Uint8 *last_hat_mask;
+    Uint32 guide_button_down;
+    struct SDL_GameController *next;
+} SDL_GameController;
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
@@ -1682,11 +1875,58 @@ typedef union SDL_Event
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
+// -------------------------------
+typedef enum SDL_MessageBoxButtonFlags
+{
+    SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT = 0x00000001,
+    SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT = 0x00000002
+} SDL_MessageBoxButtonFlags;
+
+typedef enum SDL_MessageBoxFlags
+{
+    SDL_MESSAGEBOX_ERROR = 0x00000010,
+    SDL_MESSAGEBOX_WARNING = 0x00000020,
+    SDL_MESSAGEBOX_INFORMATION = 0x00000040,
+    SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT = 0x00000080,
+    SDL_MESSAGEBOX_BUTTONS_RIGHT_TO_LEFT = 0x00000100
+} SDL_MessageBoxFlags;
+
+typedef struct SDL_MessageBoxButtonData
+{
+    Uint32 flags;
+    int buttonid;
+    const char * text;
+} SDL_MessageBoxButtonData;
+
+typedef struct SDL_MessageBoxColorScheme {
+  int a; // :mad: todo missing
+} SDL_MessageBoxColorScheme;
+
+typedef struct SDL_MessageBoxData {
+    Uint32 flags;
+    SDL_Window *window;
+    char *title;
+    char *message;
+    int numbuttons;
+    SDL_MessageBoxButtonData *buttons;
+    SDL_MessageBoxColorScheme *colorScheme;
+} SDL_MessageBoxData;
+
+SDL_MessageBoxButtonData _SDL_MessageBoxButtonData(int flags, int buttonid, const char *text);
+SDL_Result SDL_ShowMessageBox(SDL_MessageBoxData *a, int *b);
+SDL_Result SDL_ShowSimpleMessageBox(int flags, const char *title, const char *message, SDL_Window *window);
+// -------------------------------
+
+void SDL_Log(const char *a);
+char *SDL_GetPrefPath(const char *a, const char *b);
+char *SDL_GetBasePath();
 
 SDL_Result SDL_Init(int flags);
 bool SDL_WasInit(int flags);
 SDL_Result SDL_InitSubSystem(int flags);
 void SDL_QuitSubSystem(int flags);
+
+void SDL_free(void *a);
 
 int SDL_GetNumVideoDisplays();
 
@@ -1694,6 +1934,10 @@ void SDL_FillRect(SDL_Surface *surface, SDL_Rect *a, int b);
 
 SDL_Scancode SDL_GetScancodeFromName(const char *a);
 const char *SDL_GetScancodeName(SDL_Scancode a);
+Uint8 *SDL_GetKeyboardState(void *a);
+void SDL_ResetKeyboard();
+const char *SDL_GetKeyName(SDL_KeyCode a);
+
 void SDL_Delay(double a);
 void SDL_Quit();
 void SDL_JoystickEventState(int state);
@@ -1705,14 +1949,22 @@ int SDL_NumJoysticks();
 SDL_Joystick *SDL_JoystickOpen(int j);
 void SDL_JoystickClose(SDL_Joystick *a);
 const char *SDL_JoystickName(SDL_Joystick *a);
+const char *SDL_JoystickNameForIndex(int a);
 int SDL_JoystickNumAxes(SDL_Joystick *a);
 int SDL_JoystickNumButtons(SDL_Joystick *a);
 int SDL_JoystickNumHats(SDL_Joystick *a);
+SDL_GameController *SDL_GameControllerOpen(int a);
+int SDL_GameControllerGetButton(SDL_GameController *a,int b);
+int SDL_GameControllerGetAxis(SDL_GameController *a,int b);
+void SDL_GameControllerClose(SDL_GameController *a);
 
 int SDL_GetTicks();
 
 void SDL_PushEvent(const SDL_Event *e);
 bool SDL_PollEvent(SDL_Event *e);
+bool SDL_WaitEvent(SDL_Event *e);
+void SDL_EventState(SDL_EventType a, int b);
+
 int SDL_GetError();
 
 void SDL_ShowCursor(const bool show);
@@ -1737,13 +1989,24 @@ unsigned int SDL_GetModState();
 unsigned short SDL_Swap16(unsigned short a);
 
 SDL_Surface *SDL_CreateRGBSurface(int a, int w, int h, int cl, int d, int e, int f, int g);
+SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int w, int h, int bpp, int pitch, int rmask, int gmask, int bmask, int amask);
+SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *a, SDL_Surface *b);
+
 SDL_Window *SDL_CreateWindow(const char *windowName,int posX, int posY, int w, int h, int flags);
+void SDL_SetWindowIcon(SDL_Window *window, SDL_Surface *icon);
+int SDL_GetWindowFlags(SDL_Window *a);
 SDL_Renderer *SDL_CreateRenderer(SDL_Window *a, int b, int c);
+void SDL_SetRenderTarget(SDL_Renderer *a, SDL_Texture *b);
+void SDL_GetRendererOutputSize(SDL_Renderer *a, int *w, int *h);
+void SDL_RenderSetLogicalSize(SDL_Renderer *a, int w, int h);
 SDL_Texture *SDL_CreateTexture(SDL_Renderer *a, unsigned int format, int flags, int w, int h);
+void SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode b);
+void SDL_SetTextureAlphaMod(SDL_Texture *texture, int b);
 void SDL_ShowWindow(SDL_Window *a);
 void SDL_SetRenderDrawColor(SDL_Renderer *z, int r, int g, int b, int a);
 void SDL_RenderClear(SDL_Renderer *a);
 void SDL_RenderPresent(SDL_Renderer *a);
+int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect *dst_rect);
 void SDL_DestroyWindow(SDL_Window *a);
 void SDL_FreeSurface(SDL_Surface *a);
 void SDL_DestroyRenderer(SDL_Renderer *a);
@@ -1759,10 +2022,23 @@ void SDL_SetWindowSize(SDL_Window *a, int w, int h);
 SDL_Result SDL_SetWindowFullscreen(SDL_Window *a, bool b);
 
 void SDL_QueryTexture(SDL_Texture *t, int *a, int *b, int *w, int *h);
-void SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect *dst_rect);
 
 void SDL_LockTexture(SDL_Texture *t, void *a, void **data, int *pitch);
 void SDL_UnlockTexture(SDL_Texture *t);
+SDL_Result SDL_UpdateTexture(SDL_Texture *t, const void *a, const void *pixels, int pitch);
+
+bool SDL_HasClipboardText();
+char *SDL_GetClipboardText();
+bool SDL_HasScreenKeyboardSupport();
+
+void SDL_SaveBMP(SDL_Surface *a, const char *path);
+const char *SDL_GetCurrentVideoDriver();
+const char *SDL_GetCurrentAudioDriver();
+
+SDL_Result SDL_RenderReadPixels(SDL_Renderer *a, int b, SDL_PixelFormatEnum format, void *pixels, int pitch);
+
+SDL_RWops *SDL_RWFromMem(void *a, int b);
+SDL_Surface *SDL_LoadBMP_RW(SDL_RWops *a,int b);
 
 #ifdef __cplusplus
 }
