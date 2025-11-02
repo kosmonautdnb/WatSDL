@@ -1,7 +1,7 @@
 # WatSDL
 Some functions for emulating the SDL2 on FreeDos / WatcomC++  
   
-Not final, just in the making. And perhaps very clumsy and cheesy at the moment.  
+Not final, just in the making. And perhaps very clumsy and cheesy at the moment. (It's actually just an attempt to convert Tyrian at the moment.) 
 
 But wait:  
 
