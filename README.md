@@ -11,6 +11,8 @@ OpenTyrian source code and compile instructions are in tyrian.zip.
 
 OpenTyrians original repository:  
 https://github.com/opentyrian/opentyrian.git
+SDL (Simple DirectMedia Layer) original repository:  
+https://github.com/libsdl-org/SDL.git  
 
 It's also running with Watcom C++ 11 (the one before OpenWatcom).
 
