@@ -10,7 +10,7 @@ OpenTyrian is compiling and running/fully playable with it already.
 OpenTyrian source code and compile instructions are in tyrian.zip.  
 
 OpenTyrians original repository:  
-https://github.com/opentyrian/opentyrian.git
+https://github.com/opentyrian/opentyrian.git  
 SDL (Simple DirectMedia Layer) original repository:  
 https://github.com/libsdl-org/SDL.git  
 
