@@ -13,7 +13,7 @@ extern "C" {
 typedef void (__interrupt __far* KeyboardHandler)();
 static KeyboardHandler oldKeyboardHandler = NULL;
 
-Uint8 keyPressed[0x80] = {0};
+Uint8 keyPressed[0x100] = {0};
 
 bool isKeyPressed(int scanCode) {
   return keyPressed[scanCode & 0x7f];
@@ -247,7 +247,7 @@ int SDL_GetTicks() {
 SDL_Event events[256];
 int currentEvent=0;
 
-Uint8 keyPressed_last[0x80] = {0};
+Uint8 keyPressed_last[0x100] = {0};
 
 Uint8 *SDL_GetKeyboardState(void *a) {
   return keyPressed;
@@ -258,11 +258,15 @@ void SDL_ResetKeyboard() {
   memset(keyPressed,0,sizeof(keyPressed));
 }
 
-const char *SDL_GetKeyName(SDL_KeyCode a) {
+const char *SDL_GetKeyName(SDL_Keycode a) {
   static char buffer[2];
   buffer[1] = 0;
   buffer[0] = (int)a & 255;
   return buffer;
+}
+
+SDL_KeyCode convertScanCodeToSymbolic(int a) {
+  return SDLK_UNKNOWN;
 }
 
 void addKeyboardEvents() {
@@ -279,13 +283,15 @@ void addKeyboardEvents() {
       currentEvent++;
     }
   }
-  for (int i = 0; i < 0x80; i++) {
+  for (int i = 0; i < sizeof(keyPressed); i++) {
     if (keyPressed[i] != keyPressed_last[i]) {
       keyPressed_last[i] = keyPressed[i];
       SDL_Event *v = &events[currentEvent];
       v->type = keyPressed[i] ? SDL_KEYDOWN : SDL_KEYUP;
       v->key.state = keyPressed[i] ? 1 : 0;
       v->key.keysym.scancode = i;
+      v->key.keysym.sym = convertScanCodeToSymbolic(i);
+      v->key.keysym.mod = 0;
       currentEvent++;
     }
   }
@@ -635,10 +641,10 @@ int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect
   int sy0 = 0;
   int sx1 = sx0+t->w;
   int sy1 = sy0+t->h;
-  int dx0 = dx0;
-  int dy0 = dy0;
-  int dx1 = dx1;
-  int dy1 = dy1;
+  int dx0 = 0;
+  int dy0 = 0;
+  int dx1 = r->window->w;
+  int dy1 = r->window->h;
   if (src_rect != NULL) {
     sx0 = src_rect->x;
     sy0 = src_rect->y;
@@ -651,6 +657,7 @@ int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect
     dx1 = dx0+dst_rect->w;
     dy1 = dy0+dst_rect->h;
   }
+  bool sameSize=((sx1-sx0)==(dx1-dx0))&&((sy1-sy0)==(dy1-dy0));
   int minx = 0;
   int miny = 0;
   int maxx = r->window->w;
@@ -659,33 +666,69 @@ int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect
   if (dx1<=minx) return SDL_ERROR;
   if (dy0>=maxy) return SDL_ERROR;
   if (dy1<=miny) return SDL_ERROR;
-  if (dx0<minx) {
-    sx0 += minx-dx0;
-    dx0 = minx;
-  }
-  if (dy0<miny) {
-    sy0 += miny-dy0;
-    dy0 = miny;
-  }
-  if (dx1>maxx) {
-    sx1 -= dx1-maxx;
-    dx1 = maxx;
-  }
-  if (dy1>maxy) {
-    sy1 -= dy1-maxy;
-    dy1 = maxy;
-  }
-  for (int y = dy0; y < dy1; y++) {
-    const int sy = y - dy0 + sy0;
-    if (sy >= 0 && sy < t->h) {
-      for (int x = dx0; x < dx1; x++) {
-        const int sx = x - dx0 + sx0;
-        if (sx >= 0 && sx < t->w) {
-          glFrameBuffer[x+y*glFrameBufferWidth] = t->pixels[sx+sy*t->w];
+  if (sameSize) {
+    if (dx0<minx) {
+      sx0 += minx-dx0;
+      dx0 = minx;
+    }
+    if (dy0<miny) {
+      sy0 += miny-dy0;
+      dy0 = miny;
+    }
+    if (dx1>maxx) {
+      sx1 -= dx1-maxx;
+      dx1 = maxx;
+    }
+    if (dy1>maxy) {
+      sy1 -= dy1-maxy;
+      dy1 = maxy;
+    }
+    for (int y = dy0; y < dy1; y++) {
+      const int sy = y - dy0 + sy0;
+      if (sy >= 0 && sy < t->h) {
+        for (int x = dx0; x < dx1; x++) {
+          const int sx = x - dx0 + sx0;
+          if (sx >= 0 && sx < t->w) {
+            glFrameBuffer[x+y*glFrameBufferWidth] = t->pixels[sx+sy*t->w];
+          }
         }
       }
     }
-  }
+  } else { // sameSize
+    double sfx0 = sx0;
+    double sfx1 = sx1;
+    double sfy0 = sy0;
+    double sfy1 = sy1;
+    double ax = (double)(sx1-sx0)/(dx1-dx0);
+    double ay = (double)(sy1-sy0)/(dy1-dy0);
+    if (dx0<minx) {
+      sfx0 += (minx-dx0)*ax;
+      dx0 = minx;
+    }
+    if (dy0<miny) {
+      sfy0 += (miny-dy0)*ay;
+      dy0 = miny;
+    }
+    if (dx1>maxx) {
+      sfx1 -= (dx1-maxx)*ax;
+      dx1 = maxx;
+    }
+    if (dy1>maxy) {
+      sfy1 -= (dy1-maxy)*ay;
+      dy1 = maxy;
+    }
+    for (int y = dy0; y < dy1; y++) {
+      const int sy = (int)((y - dy0)*ay + sfy0);
+      if (sy >= 0 && sy < t->h) {
+        for (int x = dx0; x < dx1; x++) {
+          const int sx = (int)((x - dx0)*ax + sx0);
+          if (sx >= 0 && sx < t->w) {
+            glFrameBuffer[x+y*glFrameBufferWidth] = t->pixels[sx+sy*t->w];
+          }
+        }
+      }
+    }
+  } // sameSize
   return SDL_OK;
 }
 

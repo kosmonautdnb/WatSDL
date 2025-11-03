@@ -231,8 +231,7 @@ typedef enum SDL_RendererFlags
 #define SCANCODE_WINDOWS 91
 
 typedef unsigned int SDL_Scancode;
-#define SCANSHIFT (0x4000)
-#define SCANALT (0x8000)
+#define SCANSHIFT (0x80)
 #define SDL_SCANCODE_NONE 0
 #define SDL_SCANCODE_UNKNOWN 0
 #define SDL_SCANCODE_PRINTSCREEN SCANCODE_PRINT
@@ -328,8 +327,8 @@ typedef unsigned int SDL_Scancode;
 #define SDL_SCANCODE_SEMICOLON (SCANSHIFT|SCANCODE_COMMA)
 #define SDL_SCANCODE_PERIOD (SCANSHIFT|SCANCODE_DOT)
 #define SDL_SCANCODE_EQUALS (SCANSHIFT|SCANCODE_0)
-#define SDL_SCANCODE_LEFTBRACKET (SCANALT|SCANCODE_8)
-#define SDL_SCANCODE_RIGHTBRACKET (SCANALT|SCANCODE_9)
+#define SDL_SCANCODE_LEFTBRACKET (SCANSHIFT|SCANCODE_8)
+#define SDL_SCANCODE_RIGHTBRACKET (SCANSHIFT|SCANCODE_9)
 #define SDL_SCANCODE_CAPSLOCK SCANCODE_SHIFTLOCK
 #define SDL_SCANCODE_SCROLLLOCK 0 // :mad: not defined
 #define SDL_SCANCODE_BACKSLASH (SCANSHIFT|SCANCODE_7)
@@ -1936,7 +1935,7 @@ SDL_Scancode SDL_GetScancodeFromName(const char *a);
 const char *SDL_GetScancodeName(SDL_Scancode a);
 Uint8 *SDL_GetKeyboardState(void *a);
 void SDL_ResetKeyboard();
-const char *SDL_GetKeyName(SDL_KeyCode a);
+const char *SDL_GetKeyName(SDL_Keycode a);
 
 void SDL_Delay(double a);
 void SDL_Quit();
