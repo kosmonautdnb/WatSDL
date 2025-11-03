@@ -4,7 +4,7 @@ Some functions for emulating the SDL2 on FreeDos / WatcomC++
 SDL (Simple DirectMedia Layer) original repository:  
 https://github.com/libsdl-org/SDL.git  
   
-Not final, just in the making. And perhaps very clumsy and cheesy at the moment. (It's actually just an attempt to convert Tyrian at the moment.) 
+Not final, just in the making. And perhaps very clumsy and cheesy at the moment. And justly WatcomC++ 11.0 is twice times the slow as DJGPP the heck, too. You need a fast setup for this. (So it's actually just an attempt to convert Tyrian at the moment.) 
 
 But wait:  
 
