@@ -204,9 +204,9 @@ typedef enum SDL_RendererFlags
 #define SCANCODE_NUMNUM 69
 #define SCANCODE_ROLL 70
 #define SCANCODE_START 71
+#define SCANCODE_NUM7 71
 #define SCANCODE_NUM8 72
 #define SCANCODE_UP 72
-#define SCANCODE_NUM7 71
 #define SCANCODE_NUM9 73
 #define SCANCODE_PAGEUP 73
 #define SCANCODE_NUMMINUS 74
@@ -1876,6 +1876,7 @@ typedef union SDL_Event
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
 // -------------------------------
+void SDL_SetBiosCursor(int x, int y);
 typedef enum SDL_MessageBoxButtonFlags
 {
     SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT = 0x00000001,

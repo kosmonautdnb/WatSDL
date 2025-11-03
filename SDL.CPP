@@ -12,6 +12,15 @@ extern "C" {
 
 // PMODEW is needed for the Irqs to work (not Dos4gw)
 
+void SDL_SetBiosCursor(int x, int y) {
+    union REGS regs;
+    regs.x.eax = 0x200;
+    regs.h.bh = 0;
+    regs.h.dl = x;
+    regs.h.dh = y;
+    int386(0x10, &regs, &regs);
+}
+
 #ifdef SDL_USETIMERIRQ
 static double timerSeconds = 0;
 static int timerIrqPos = 0;
@@ -28,6 +37,21 @@ static void (__interrupt __far timerIrqHandler) (void)
     oldTimerIrqHandler();
   } else {
     outp(0x20,0x20);
+  }
+}
+
+static void uninstallTimerIrq() {
+  if (oldTimerIrqHandler != NULL) {
+    union REGS r;
+    outp(0x43,0x36);
+    outp(0x40,0); // both 0 = 65536 = 1193180.0/65536.0 = ~18.2 hz
+    outp(0x40,0);
+    r.x.eax = 0x205;
+    r.h.bl = 0x08;
+    r.x.ecx = FP_SEG(oldTimerIrqHandler);
+    r.x.edx = FP_OFF(oldTimerIrqHandler);
+    int386 (0x31, &r, &r);
+    oldTimerIrqHandler = NULL;
   }
 }
 
@@ -49,25 +73,13 @@ static void installTimerIrq() {
     outp(0x43,0x36);
     outp(0x40,here & 255);
     outp(0x40,(here>>8) & 255);
+    atexit(uninstallTimerIrq);
   }
 }
 
-static void uninstallTimerIrq() {
-  if (oldTimerIrqHandler != NULL) {
-    union REGS r;
-    outp(0x43,0x36);
-    outp(0x40,0); // both 0 = 65536 = 1193180.0/65536.0 = ~18.2 hz
-    outp(0x40,0);
-    r.x.eax = 0x205;
-    r.h.bl = 0x08;
-    r.x.ecx = FP_SEG(oldTimerIrqHandler);
-    r.x.edx = FP_OFF(oldTimerIrqHandler);
-    int386 (0x31, &r, &r);
-    oldTimerIrqHandler = NULL;
-  }
-}
 void SDL_SetSeconds(double s) {timerSeconds = s;}
 double SDL_GetSeconds() {return timerSeconds;}
+
 #else // SDL_USETIMERIRQ
 static void installTimerIrq() {;}
 static void uninstallTimerIrq() {;}
@@ -165,7 +177,7 @@ SDL_Result SDL_Init(int flags) {
   installKeyboardHandler();
   installTimerIrq();
   SDL_SetSeconds(0);
-  glWaitVSync = GL_TRUE;
+  //glWaitVSync = GL_TRUE;
   return SDL_OK;
 }
 
@@ -234,6 +246,8 @@ const char *SDL_GetScancodeName(SDL_Scancode a) {
 }
 
 void SDL_Delay(double a) {
+  double b = SDL_GetTicks();
+  while(fabs((double)SDL_GetTicks()-b)<a) {;}
 }
 
 void SDL_Quit() {
@@ -332,11 +346,139 @@ const char *SDL_GetKeyName(SDL_Keycode a) {
   return buffer;
 }
 
+/*
+  CONVSC2(SDLK_EXCLAIM,SDL_SCANCODE_EXCLAIM)\
+  CONVSC2(SDLK_QUOTEDBL,SDL_SCANCODE_QUOTEDBL)\
+  CONVSC2(SDLK_HASH,SDL_SCANCODE_HASH)\
+  CONVSC2(SDLK_PERCENT,SDL_SCANCODE_PERCENT)\
+  CONVSC2(SDLK_DOLLAR,SDL_SCANCODE_DOLLAR)\
+  CONVSC2(SDLK_AMPERSAND,SDL_SCANCODE_AMPERSAND)\
+  CONVSC2(SDLK_QUOTE,SDL_SCANCODE_QUOTE)\
+  CONVSC2(SDLK_LEFTPAREN,SDL_SCANCODE_LEFTPAREN)\
+  CONVSC2(SDLK_RIGHTPAREN,SDL_SCANCODE_RIGHTPAREN)\
+  CONVSC2(SDLK_COLON,SDL_SCANCODE_COLON)\
+  CONVSC2(SDLK_LESS,SDL_SCANCODE_LESS)\
+  CONVSC2(SDLK_GREATER,SDL_SCANCODE_GREATER)\
+  CONVSC2(SDLK_QUESTION,SDL_SCANCODE_QUESTION)\
+  CONVSC2(SDLK_AT,SDL_SCANCODE_AT)\
+  CONVSC2(SDLK_CARET,SDL_SCANCODE_CARET)\
+  CONVSC2(SDLK_UNDERSCORE,SDL_SCANCODE_UNDERSCORE)\
+  CONVSC2(SDLK_SCROLLLOCK,SDL_SCANCODE_SCROLLOCK)\
+  CONVSC2(SDLK_ASTERISK,SDL_SCANCODE_ASTERISK)\
+  CONVSC2(SDLK_BACKQUOTE,SDL_SCANCODE_BACKQUOTE)\
+  CONVSC2(SDLK_KP_PERIOD,SDL_SCANCODE_KP_PERIOD)\
+  CONVSC2(SDLK_KP_DIVIDE,SDL_SCANCODE_KP_DIVIDE)\
+  CONVSC2(SDLK_KP_ENTER,SDL_SCANCODE_KP_ENTER)\
+  CONVSC2(SDLK_PAUSE,SDL_SCANCODE_PAUSE)\
+  CONVSC2(SDLK_KP_1,SDL_SCANCODE_KP_1)\
+  CONVSC2(SDLK_KP_2,SDL_SCANCODE_KP_2)\
+  CONVSC2(SDLK_KP_3,SDL_SCANCODE_KP_3)\
+  CONVSC2(SDLK_KP_4,SDL_SCANCODE_KP_4)\
+  CONVSC2(SDLK_KP_6,SDL_SCANCODE_KP_6)\
+  CONVSC2(SDLK_KP_7,SDL_SCANCODE_KP_7)\
+  CONVSC2(SDLK_KP_8,SDL_SCANCODE_KP_8)\
+  CONVSC2(SDLK_KP_9,SDL_SCANCODE_KP_9)\
+  CONVSC2(SDLK_KP_0,SDL_SCANCODE_KP_0)\
+  CONVSC2(SDLK_KP_MULTIPLY,SDL_SCANCODE_KP_MULTIPLY)\
+  CONVSC2(SDLK_RCTRL,SDL_SCANCODE_RCTRL)\
+  CONVSC2(SDLK_RALT,SDL_SCANCODE_RALT)\
+  CONVSC2(SDLK_PERIOD,SDL_SCANCODE_PERIOD)\
+  CONVSC2(SDLK_SLASH,SDL_SCANCODE_SLASH)\
+*/
+#define CONVSC2(__ret__,__from__) case __from__ : {return __ret__;} break;
+#define CONVSCM\
+  CONVSC2(SDLK_UNKNOWN,SDL_SCANCODE_UNKNOWN)\
+  CONVSC2(SDLK_RETURN,SDL_SCANCODE_RETURN)\
+  CONVSC2(SDLK_ESCAPE,SDL_SCANCODE_ESCAPE)\
+  CONVSC2(SDLK_BACKSPACE,SDL_SCANCODE_BACKSPACE)\
+  CONVSC2(SDLK_TAB,SDL_SCANCODE_TAB)\
+  CONVSC2(SDLK_SPACE,SDL_SCANCODE_SPACE)\
+  CONVSC2(SDLK_PLUS,SDL_SCANCODE_PLUS)\
+  CONVSC2(SDLK_COMMA,SDL_SCANCODE_COMMA)\
+  CONVSC2(SDLK_MINUS,SDL_SCANCODE_MINUS)\
+  CONVSC2(SDLK_0,SDL_SCANCODE_0)\
+  CONVSC2(SDLK_1,SDL_SCANCODE_1)\
+  CONVSC2(SDLK_2,SDL_SCANCODE_2)\
+  CONVSC2(SDLK_3,SDL_SCANCODE_3)\
+  CONVSC2(SDLK_4,SDL_SCANCODE_4)\
+  CONVSC2(SDLK_5,SDL_SCANCODE_5)\
+  CONVSC2(SDLK_6,SDL_SCANCODE_6)\
+  CONVSC2(SDLK_7,SDL_SCANCODE_7)\
+  CONVSC2(SDLK_8,SDL_SCANCODE_8)\
+  CONVSC2(SDLK_9,SDL_SCANCODE_9)\
+  CONVSC2(SDLK_SEMICOLON,SDL_SCANCODE_SEMICOLON)\
+  CONVSC2(SDLK_EQUALS,SDL_SCANCODE_EQUALS)\
+  CONVSC2(SDLK_LEFTBRACKET,SDL_SCANCODE_LEFTBRACKET)\
+  CONVSC2(SDLK_BACKSLASH,SDL_SCANCODE_BACKSLASH)\
+  CONVSC2(SDLK_RIGHTBRACKET,SDL_SCANCODE_RIGHTBRACKET)\
+  CONVSC2(SDLK_a,SDL_SCANCODE_A)\
+  CONVSC2(SDLK_b,SDL_SCANCODE_B)\
+  CONVSC2(SDLK_c,SDL_SCANCODE_C)\
+  CONVSC2(SDLK_d,SDL_SCANCODE_D)\
+  CONVSC2(SDLK_e,SDL_SCANCODE_E)\
+  CONVSC2(SDLK_f,SDL_SCANCODE_F)\
+  CONVSC2(SDLK_g,SDL_SCANCODE_G)\
+  CONVSC2(SDLK_h,SDL_SCANCODE_H)\
+  CONVSC2(SDLK_i,SDL_SCANCODE_I)\
+  CONVSC2(SDLK_j,SDL_SCANCODE_J)\
+  CONVSC2(SDLK_k,SDL_SCANCODE_K)\
+  CONVSC2(SDLK_l,SDL_SCANCODE_L)\
+  CONVSC2(SDLK_m,SDL_SCANCODE_M)\
+  CONVSC2(SDLK_n,SDL_SCANCODE_N)\
+  CONVSC2(SDLK_o,SDL_SCANCODE_O)\
+  CONVSC2(SDLK_p,SDL_SCANCODE_P)\
+  CONVSC2(SDLK_q,SDL_SCANCODE_Q)\
+  CONVSC2(SDLK_r,SDL_SCANCODE_R)\
+  CONVSC2(SDLK_s,SDL_SCANCODE_S)\
+  CONVSC2(SDLK_t,SDL_SCANCODE_T)\
+  CONVSC2(SDLK_u,SDL_SCANCODE_U)\
+  CONVSC2(SDLK_v,SDL_SCANCODE_V)\
+  CONVSC2(SDLK_w,SDL_SCANCODE_W)\
+  CONVSC2(SDLK_x,SDL_SCANCODE_X)\
+  CONVSC2(SDLK_y,SDL_SCANCODE_Y)\
+  CONVSC2(SDLK_z,SDL_SCANCODE_Z)\
+  CONVSC2(SDLK_CAPSLOCK,SDL_SCANCODE_CAPSLOCK)\
+  CONVSC2(SDLK_F1,SDL_SCANCODE_F1)\
+  CONVSC2(SDLK_F2,SDL_SCANCODE_F2)\
+  CONVSC2(SDLK_F3,SDL_SCANCODE_F3)\
+  CONVSC2(SDLK_F4,SDL_SCANCODE_F4)\
+  CONVSC2(SDLK_F5,SDL_SCANCODE_F5)\
+  CONVSC2(SDLK_F6,SDL_SCANCODE_F6)\
+  CONVSC2(SDLK_F7,SDL_SCANCODE_F7)\
+  CONVSC2(SDLK_F8,SDL_SCANCODE_F8)\
+  CONVSC2(SDLK_F9,SDL_SCANCODE_F9)\
+  CONVSC2(SDLK_F10,SDL_SCANCODE_F10)\
+  CONVSC2(SDLK_F11,SDL_SCANCODE_F11)\
+  CONVSC2(SDLK_F12,SDL_SCANCODE_F12)\
+  CONVSC2(SDLK_PRINTSCREEN,SDL_SCANCODE_PRINTSCREEN)\
+  CONVSC2(SDLK_INSERT,SDL_SCANCODE_INSERT)\
+  CONVSC2(SDLK_HOME,SDL_SCANCODE_HOME)\
+  CONVSC2(SDLK_PAGEUP,SDL_SCANCODE_PAGEUP)\
+  CONVSC2(SDLK_DELETE,SDL_SCANCODE_DELETE)\
+  CONVSC2(SDLK_END,SDL_SCANCODE_END)\
+  CONVSC2(SDLK_PAGEDOWN,SDL_SCANCODE_PAGEDOWN)\
+  CONVSC2(SDLK_RIGHT,SDL_SCANCODE_RIGHT)\
+  CONVSC2(SDLK_LEFT,SDL_SCANCODE_LEFT)\
+  CONVSC2(SDLK_DOWN,SDL_SCANCODE_DOWN)\
+  CONVSC2(SDLK_UP,SDL_SCANCODE_UP)\
+  CONVSC2(SDLK_NUMLOCKCLEAR,SDL_SCANCODE_NUMLOCKCLEAR)\
+  CONVSC2(SDLK_KP_MINUS,SDL_SCANCODE_KP_MINUS)\
+  CONVSC2(SDLK_KP_PLUS,SDL_SCANCODE_KP_PLUS)\
+  CONVSC2(SDLK_LCTRL,SDL_SCANCODE_LCTRL)\
+  CONVSC2(SDLK_LSHIFT,SDL_SCANCODE_LSHIFT)\
+  CONVSC2(SDLK_LALT,SDL_SCANCODE_LALT)\
+  CONVSC2(SDLK_RSHIFT,SDL_SCANCODE_RSHIFT)\
+  CONVSC2(SDLK_KP_5,SDL_SCANCODE_KP_5)
+
+
 SDL_KeyCode convertScanCodeToSymbolic(int a) {
+  switch(a) {
+    CONVSCM
+  }
   return SDLK_UNKNOWN;
 }
 
-void addKeyboardEvents() {
+bool addKeyboardEvents() {
   int key = glNextKey();
   if (key == GL_VK_END) {
     SDL_Quit();
@@ -359,16 +501,23 @@ void addKeyboardEvents() {
       v->key.keysym.scancode = i;
       v->key.keysym.sym = convertScanCodeToSymbolic(i);
       v->key.keysym.mod = 0;
+      if (keyPressed[SDL_SCANCODE_LCTRL]) v->key.keysym.mod|=(int)KMOD_LCTRL;
+      if (keyPressed[SDL_SCANCODE_RCTRL]) v->key.keysym.mod|=(int)KMOD_RCTRL;
+      if (keyPressed[SDL_SCANCODE_LALT]) v->key.keysym.mod|=(int)KMOD_LALT;
+      if (keyPressed[SDL_SCANCODE_RALT]) v->key.keysym.mod|=(int)KMOD_RALT;
+      if (keyPressed[SDL_SCANCODE_LSHIFT]) v->key.keysym.mod|=(int)KMOD_LSHIFT;
+      if (keyPressed[SDL_SCANCODE_RSHIFT]) v->key.keysym.mod|=(int)KMOD_RSHIFT;
       currentEvent++;
     }
   }
+  return currentEvent>0;
 }
 
 bool buttonPressed_last[3] = {0};
 double sdlMouseX = 0;
 double sdlMouseY = 0;
 
-void addMouseEvents() {
+bool addMouseEvents() {
   double dx,dy;
   glNextMouseDelta(&dx,&dy);
   sdlMouseX += dx;
@@ -406,6 +555,7 @@ void addMouseEvents() {
     v->motion.yrel = dy;
     currentEvent++;
   }
+  return currentEvent>0;
 }
 
 void addFocusEvent(bool hasNowFocus) {
@@ -433,12 +583,14 @@ bool SDL_PollEvent(SDL_Event *e) {
     return false;  
   }
   currentEvent--;
-  *e = events[currentEvent];
+  if (e != NULL) *e = events[currentEvent];
   return true;
 }
 
 bool SDL_WaitEvent(SDL_Event *e) {
-  return SDL_PollEvent(e);
+  while(!SDL_PollEvent(e));
+  if (e==NULL) currentEvent++;
+  return true;
 }
 
 void SDL_EventState(SDL_EventType a, int b) {
@@ -503,11 +655,10 @@ unsigned short SDL_Swap16(unsigned short a) {
 }
 
 SDL_Surface *SDL_CreateRGBSurface(int a, int w, int h, int cl, int d, int e, int f, int g) {
-  if (cl != 8) ERROR("Error1");
   RALLOC(SDL_Surface,r);
   r->format = _RALLOC(SDL_PixelFormat,1);
   r->format->BitsPerPixel = cl;
-  r->pixels = (Uint8*)malloc(w*h); // 8bit
+  r->pixels = (Uint8*)malloc(w*h*(cl/8)); // 8bit
   r->pitch = w;
   r->w = w;
   r->h = h;
@@ -701,6 +852,7 @@ void SDL_RenderPresent(SDL_Renderer *a) {
 }
 
 int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect *dst_rect) {
+  if (t == NULL) return SDL_ERROR;
   if (glFrameBuffer == NULL) return SDL_ERROR;
   if (glFrameBufferWidth != r->window->w) return SDL_ERROR;
   if (glFrameBufferHeight != r->window->h) return SDL_ERROR;
