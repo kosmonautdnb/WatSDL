@@ -21,7 +21,7 @@ void SDL_SetBiosCursor(int x, int y) {
     int386(0x10, &regs, &regs);
 }
 
-#ifdef SDL_USETIMERIRQ
+#if defined(SDL_USETIMERIRQ) && (!defined(__DJGPP__))
 static double timerSeconds = 0;
 static int timerIrqPos = 0;
 typedef void (__interrupt __far* TimerIrqHandler)();
