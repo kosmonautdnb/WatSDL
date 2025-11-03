@@ -17,7 +17,7 @@ It's also running with Watcom C++ 11 (the one before OpenWatcom).
 OpenTyrians original repository:  
 https://github.com/opentyrian/opentyrian.git  
 
-YapeSDL by Attila Grosz can be found here:
+YapeSDL by Attila Grosz can be found here:  
 https://github.com/calmopyrin/yapesdl.git
 
 **You need PMODEW(in the zip) instead of Dos4gw in order to get the keyboard and timers working**
