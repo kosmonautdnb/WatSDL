@@ -10,6 +10,71 @@
 extern "C" {
 #endif // __cplusplus
 
+// PMODEW is needed for the Irqs to work (not Dos4gw)
+
+#ifdef SDL_USETIMERIRQ
+static double timerSeconds = 0;
+static int timerIrqPos = 0;
+typedef void (__interrupt __far* TimerIrqHandler)();
+static TimerIrqHandler oldTimerIrqHandler = NULL;
+#define HARDWARE_TIMER_FREQUENCY 1193180 // 1193180 / 65536  = 18.2 (found in the internet that it's more like 1193181.66666666 instead of 1193180)
+#define TIMER_MULTIPLICATOR 1024 // 1193180 * 1024 / 65536
+static void (__interrupt __far timerIrqHandler) (void)
+{
+  timerSeconds += (double)1.0/((double)HARDWARE_TIMER_FREQUENCY * TIMER_MULTIPLICATOR / 65536.0);
+  timerIrqPos++;
+  if (timerIrqPos>=TIMER_MULTIPLICATOR) {
+    timerIrqPos = 0;
+    oldTimerIrqHandler();
+  } else {
+    outp(0x20,0x20);
+  }
+}
+
+static void installTimerIrq() {
+  if (oldTimerIrqHandler == NULL) {
+    timerSeconds=0;
+    timerIrqPos=0;
+    union REGS r;
+    r.x.eax = 0x204;
+    r.h.bl = 0x08;
+    int386(0x31, &r, &r);
+    oldTimerIrqHandler = (TimerIrqHandler)MK_FP(r.x.ecx,r.x.edx);
+    int here = 65536/TIMER_MULTIPLICATOR;
+    r.x.eax = 0x205;
+    r.h.bl = 0x08;
+    r.x.ecx = FP_SEG(timerIrqHandler);
+    r.x.edx = FP_OFF(timerIrqHandler);
+    int386 (0x31, &r, &r);
+    outp(0x43,0x36);
+    outp(0x40,here & 255);
+    outp(0x40,(here>>8) & 255);
+  }
+}
+
+static void uninstallTimerIrq() {
+  if (oldTimerIrqHandler != NULL) {
+    union REGS r;
+    outp(0x43,0x36);
+    outp(0x40,0); // both 0 = 65536 = 1193180.0/65536.0 = ~18.2 hz
+    outp(0x40,0);
+    r.x.eax = 0x205;
+    r.h.bl = 0x08;
+    r.x.ecx = FP_SEG(oldTimerIrqHandler);
+    r.x.edx = FP_OFF(oldTimerIrqHandler);
+    int386 (0x31, &r, &r);
+    oldTimerIrqHandler = NULL;
+  }
+}
+void SDL_SetSeconds(double s) {timerSeconds = s;}
+double SDL_GetSeconds() {return timerSeconds;}
+#else // SDL_USETIMERIRQ
+static void installTimerIrq() {;}
+static void uninstallTimerIrq() {;}
+void SDL_SetSeconds(double s) {glSetTime(s);}
+double SDL_GetSeconds() {return glSeconds();}
+#endif // SDL_USETIMERIRQ
+
 typedef void (__interrupt __far* KeyboardHandler)();
 static KeyboardHandler oldKeyboardHandler = NULL;
 
@@ -97,8 +162,9 @@ char *SDL_GetBasePath() {
 
 SDL_Result SDL_Init(int flags) {
   sdl_initialized |= flags;
-  glSetTime(0);
   installKeyboardHandler();
+  installTimerIrq();
+  SDL_SetSeconds(0);
   glWaitVSync = GL_TRUE;
   return SDL_OK;
 }
@@ -173,6 +239,7 @@ void SDL_Delay(double a) {
 void SDL_Quit() {
   glDone();
   uninstallKeyboardHandler();
+  uninstallTimerIrq();
   exit(0);
 }
 
@@ -241,7 +308,7 @@ void SDL_GameControllerClose(SDL_GameController *a) {
 }
 
 int SDL_GetTicks() {
-  return (int)(glSeconds()*1000.0);
+  return (int)(SDL_GetSeconds()*1000.0);
 }
 
 SDL_Event events[256];

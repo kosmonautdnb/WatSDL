@@ -8,6 +8,7 @@
 #define SDL_MAJOR_VERSION 2
 #define SDL_MINOR_VERSION 32
 #define SDL_PATCHLEVEL 10
+#define SDL_USETIMERIRQ
 
 #include <direct.h>
 #include <math.h>
