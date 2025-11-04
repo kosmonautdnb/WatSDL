@@ -107,9 +107,6 @@ void SDL_GetVersion(SDL_version *a);
 #define SDL_SetHint(__x__,__y__) // :mad: todo
 #define SDL_HINT_MOUSE_RELATIVE_SYSTEM_SCALE 1 // :mad: todo
 
-unsigned short SDL_SwapLE16(unsigned short a);
-unsigned int SDL_SwapLE32(unsigned int a);
-
 #define SDL_INIT_TIMER 0x00000001
 #define SDL_INIT_AUDIO 0x00000010
 #define SDL_INIT_VIDEO 0x00000020 
@@ -866,7 +863,7 @@ typedef struct SDL_Color
     Uint8 a;
 } SDL_Color;
 #define SDL_Colour SDL_Color
-static inline SDL_Color SDL_Color_(int r,int g, int b, int a = 0xff) {SDL_Color r2; r2.r = r; r2.g=g; r2.b=b; r2.a=a; return r2;}
+static inline SDL_Color SDL_Color_(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 0xff) {SDL_Color r2; r2.r = r; r2.g=g; r2.b=b; r2.a=a; return r2;}
 
 typedef struct SDL_AudioCVT {
   void *buf;
@@ -886,6 +883,8 @@ typedef struct SDL_AudioSpec {
   void *userdata;
   int size; 
 } SDL_AudioSpec;
+
+typedef Uint16 SDL_AudioFormat;
 
 #define SDL_RWOPS_UNKNOWN 0
 #define SDL_RWOPS_WINFILE 1
@@ -1875,8 +1874,125 @@ typedef union SDL_Event
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-// -------------------------------
 void SDL_SetBiosCursor(int x, int y);
+const char *SDL_GetCurrentVideoDriver();
+const char *SDL_GetCurrentAudioDriver();
+char *SDL_GetPrefPath(const char *org, const char *app);
+char *SDL_GetBasePath();
+
+void SDL_Log(const char *fmt, ...);
+const char *SDL_GetError();
+
+SDL_Result SDL_Init(Uint32 flags);
+bool SDL_WasInit(Uint32 flags);
+SDL_Result SDL_InitSubSystem(Uint32 flags);
+void SDL_QuitSubSystem(Uint32 flags);
+
+Uint32 SDL_GetTicks();
+void SDL_Delay(double ms);
+void SDL_Quit();
+void SDL_free(void *mem);
+
+int SDL_PushEvent(SDL_Event *event);
+int SDL_PollEvent(SDL_Event *event);
+int SDL_WaitEvent(SDL_Event *event);
+Uint8 SDL_EventState(Uint32 type, int state);
+
+SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device, int iscapture, const SDL_AudioSpec *desired, SDL_AudioSpec *obtained, int allowed_changes);
+void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on);
+void SDL_CloseAudioDevice(SDL_AudioDeviceID dev);
+void SDL_LockAudioDevice(SDL_AudioDeviceID dev);
+void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev);
+int SDL_BuildAudioCVT(SDL_AudioCVT *cvt, SDL_AudioFormat src_format, Uint8 src_channels, int src_rate, SDL_AudioFormat dst_format, Uint8 dst_channels, int dst_rate);
+SDL_Result SDL_ConvertAudio(SDL_AudioCVT *cvt);
+
+SDL_Scancode SDL_GetScancodeFromName(const char *name);
+const char *SDL_GetScancodeName(SDL_Scancode scancode);
+Uint8 *SDL_GetKeyboardState(int *numkeys);
+void SDL_ResetKeyboard();
+const char *SDL_GetKeyName(SDL_Keycode key);
+SDL_Keymod SDL_GetModState();
+
+int SDL_JoystickEventState(int state);
+int SDL_JoystickGetAxis(SDL_Joystick *joystick, int axis);
+int SDL_JoystickGetButton(SDL_Joystick *joystick, int button);
+int SDL_JoystickGetHat(SDL_Joystick *joystick, int hat);
+void SDL_JoystickUpdate();
+int SDL_NumJoysticks();
+SDL_Joystick *SDL_JoystickOpen(int device_index);
+void SDL_JoystickClose(SDL_Joystick *joystick);
+const char *SDL_JoystickName(SDL_Joystick *joystick);
+const char *SDL_JoystickNameForIndex(int device_index);
+int SDL_JoystickNumAxes(SDL_Joystick *joystick);
+int SDL_JoystickNumButtons(SDL_Joystick *joystick);
+int SDL_JoystickNumHats(SDL_Joystick *joystick);
+SDL_GameController *SDL_GameControllerOpen(int joystick_index);
+int SDL_GameControllerGetButton(SDL_GameController *gamecontroller,SDL_GameControllerButton button);
+int SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,SDL_GameControllerAxis axis);
+void SDL_GameControllerClose(SDL_GameController *gamecontroller);
+int SDL_ShowCursor(int toggle);
+int SDL_SetRelativeMouseMode(bool enabled);
+
+Uint32 SDL_MapRGB(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b);
+
+SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format);
+void SDL_FreeFormat(SDL_PixelFormat *format);
+const char *SDL_GetPixelFormatName(Uint32 format);
+
+SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer * renderer, SDL_Surface * surface);
+SDL_Result SDL_SetRenderTarget(SDL_Renderer *renderer, SDL_Texture *texture);
+SDL_Result SDL_GetRendererOutputSize(SDL_Renderer *renderer, int *w, int *h);
+SDL_Result SDL_RenderSetLogicalSize(SDL_Renderer *renderer, int w, int h);
+SDL_Texture *SDL_CreateTexture(SDL_Renderer *renderer, Uint32 format, int access, int w, int h);
+SDL_Result SDL_SetRenderDrawColor(SDL_Renderer *renderer, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+SDL_Result SDL_RenderClear(SDL_Renderer *renderer);
+void SDL_RenderPresent(SDL_Renderer *renderer);
+SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect);
+void SDL_DestroyRenderer(SDL_Renderer *renderer);
+SDL_Result SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect, Uint32 format, void *pixels, int pitch);
+void SDL_DestroyTexture(SDL_Texture *texture);
+
+int SDL_GetNumVideoDisplays();
+SDL_Result SDL_GetDisplayBounds(int displayIndex, SDL_Rect *rect);
+
+SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags);
+void SDL_SetWindowIcon(SDL_Window *window, SDL_Surface *icon);
+Uint32 SDL_GetWindowFlags(SDL_Window *window);
+SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, int index, Uint32 flags);
+void SDL_ShowWindow(SDL_Window *window);
+void SDL_DestroyWindow(SDL_Window *window);
+int SDL_GetWindowDisplayIndex(SDL_Window *window);
+void SDL_GetWindowSize(SDL_Window *window, int *w, int *h);
+void SDL_SetWindowPosition(SDL_Window *window, int x, int y);
+void SDL_SetWindowSize(SDL_Window *window, int w, int h);
+SDL_Result SDL_SetWindowFullscreen(SDL_Window *window, Uint32 flags);
+
+SDL_Surface *SDL_CreateRGBSurface(Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int width, int height, int depth, int pitch, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+SDL_Surface *SDL_LoadBMP_RW(SDL_RWops * src, int freesrc);
+void SDL_SaveBMP(SDL_Surface *surface, const char *file);
+void SDL_FillRect(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
+void SDL_FreeSurface(SDL_Surface *surface);
+
+SDL_Result SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode blendMode);
+SDL_Result SDL_SetTextureAlphaMod(SDL_Texture *texture, Uint8 alpha);
+SDL_Result SDL_QueryTexture(SDL_Texture *texture, Uint32 *format, int *access, int *w, int *h);
+SDL_Result SDL_LockTexture(SDL_Texture *texture, const SDL_Rect *rect, void **pixels, int *pitch);
+void SDL_UnlockTexture(SDL_Texture *texture);
+SDL_Result SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void *pixels, int pitch);
+
+bool SDL_HasClipboardText();
+char *SDL_GetClipboardText();
+bool SDL_HasScreenKeyboardSupport();
+
+SDL_RWops *SDL_RWFromMem(void *mem, int size);
+
+Uint16 SDL_Swap16(Uint16 a);
+Uint16 SDL_SwapLE16(Uint16 a);
+Uint32 SDL_SwapLE32(Uint32 a);
+size_t SDL_strlcpy(char *dst, const char *src, size_t maxlen);
+
+// -------------------------------
 typedef enum SDL_MessageBoxButtonFlags
 {
     SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT = 0x00000001,
@@ -1914,132 +2030,9 @@ typedef struct SDL_MessageBoxData {
 } SDL_MessageBoxData;
 
 SDL_MessageBoxButtonData _SDL_MessageBoxButtonData(int flags, int buttonid, const char *text);
-SDL_Result SDL_ShowMessageBox(SDL_MessageBoxData *a, int *b);
-SDL_Result SDL_ShowSimpleMessageBox(int flags, const char *title, const char *message, SDL_Window *window);
+SDL_Result SDL_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid);
+SDL_Result SDL_ShowSimpleMessageBox(Uint32 flags, const char *title, const char *message, SDL_Window *window);
 // -------------------------------
-
-void SDL_Log(const char *a);
-char *SDL_GetPrefPath(const char *a, const char *b);
-char *SDL_GetBasePath();
-
-SDL_Result SDL_Init(int flags);
-bool SDL_WasInit(int flags);
-SDL_Result SDL_InitSubSystem(int flags);
-void SDL_QuitSubSystem(int flags);
-
-void SDL_free(void *a);
-
-int SDL_GetNumVideoDisplays();
-
-void SDL_FillRect(SDL_Surface *surface, SDL_Rect *a, int b);
-
-SDL_Scancode SDL_GetScancodeFromName(const char *a);
-const char *SDL_GetScancodeName(SDL_Scancode a);
-Uint8 *SDL_GetKeyboardState(void *a);
-void SDL_ResetKeyboard();
-const char *SDL_GetKeyName(SDL_Keycode a);
-
-void SDL_Delay(double a);
-void SDL_Quit();
-void SDL_JoystickEventState(int state);
-int SDL_JoystickGetAxis(SDL_Joystick *a, int b);
-int SDL_JoystickGetButton(SDL_Joystick *a, int b);
-int SDL_JoystickGetHat(SDL_Joystick *a, int b);
-void SDL_JoystickUpdate();
-int SDL_NumJoysticks();
-SDL_Joystick *SDL_JoystickOpen(int j);
-void SDL_JoystickClose(SDL_Joystick *a);
-const char *SDL_JoystickName(SDL_Joystick *a);
-const char *SDL_JoystickNameForIndex(int a);
-int SDL_JoystickNumAxes(SDL_Joystick *a);
-int SDL_JoystickNumButtons(SDL_Joystick *a);
-int SDL_JoystickNumHats(SDL_Joystick *a);
-SDL_GameController *SDL_GameControllerOpen(int a);
-int SDL_GameControllerGetButton(SDL_GameController *a,int b);
-int SDL_GameControllerGetAxis(SDL_GameController *a,int b);
-void SDL_GameControllerClose(SDL_GameController *a);
-
-int SDL_GetTicks();
-
-void SDL_PushEvent(const SDL_Event *e);
-bool SDL_PollEvent(SDL_Event *e);
-bool SDL_WaitEvent(SDL_Event *e);
-void SDL_EventState(SDL_EventType a, int b);
-
-int SDL_GetError();
-
-void SDL_ShowCursor(const bool show);
-
-void SDL_strlcpy(char *a, const char *b, size_t c);
-
-void SDL_SetRelativeMouseMode(bool on);
-
-unsigned int SDL_OpenAudioDevice(void *a, int, const SDL_AudioSpec *b, SDL_AudioSpec *c, bool d);
-void SDL_PauseAudioDevice(unsigned int id, int b);
-void SDL_CloseAudioDevice(unsigned int id);
-
-void SDL_LockAudioDevice(unsigned int id);
-void SDL_UnlockAudioDevice(unsigned int id);
-int SDL_BuildAudioCVT(SDL_AudioCVT *cvt, unsigned int b, int c, int d, unsigned int e, int f, int g);
-SDL_Result SDL_ConvertAudio(SDL_AudioCVT *cvt);
-
-unsigned int SDL_MapRGB(SDL_PixelFormat *format, int r, int g, int b);
-
-unsigned int SDL_GetModState();
-
-unsigned short SDL_Swap16(unsigned short a);
-
-SDL_Surface *SDL_CreateRGBSurface(int a, int w, int h, int cl, int d, int e, int f, int g);
-SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int w, int h, int bpp, int pitch, int rmask, int gmask, int bmask, int amask);
-SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *a, SDL_Surface *b);
-
-SDL_Window *SDL_CreateWindow(const char *windowName,int posX, int posY, int w, int h, int flags);
-void SDL_SetWindowIcon(SDL_Window *window, SDL_Surface *icon);
-int SDL_GetWindowFlags(SDL_Window *a);
-SDL_Renderer *SDL_CreateRenderer(SDL_Window *a, int b, int c);
-void SDL_SetRenderTarget(SDL_Renderer *a, SDL_Texture *b);
-void SDL_GetRendererOutputSize(SDL_Renderer *a, int *w, int *h);
-void SDL_RenderSetLogicalSize(SDL_Renderer *a, int w, int h);
-SDL_Texture *SDL_CreateTexture(SDL_Renderer *a, unsigned int format, int flags, int w, int h);
-void SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode b);
-void SDL_SetTextureAlphaMod(SDL_Texture *texture, int b);
-void SDL_ShowWindow(SDL_Window *a);
-void SDL_SetRenderDrawColor(SDL_Renderer *z, int r, int g, int b, int a);
-void SDL_RenderClear(SDL_Renderer *a);
-void SDL_RenderPresent(SDL_Renderer *a);
-int SDL_RenderCopy(SDL_Renderer *r, SDL_Texture *t, SDL_Rect *src_rect, SDL_Rect *dst_rect);
-void SDL_DestroyWindow(SDL_Window *a);
-void SDL_FreeSurface(SDL_Surface *a);
-void SDL_DestroyRenderer(SDL_Renderer *a);
-SDL_PixelFormat *SDL_AllocFormat(unsigned int a);
-const char *SDL_GetPixelFormatName(unsigned int a);
-void SDL_DestroyTexture(SDL_Texture *a);
-void SDL_FreeFormat(SDL_PixelFormat *a);
-int SDL_GetWindowDisplayIndex(SDL_Window *a);
-void SDL_GetWindowSize(SDL_Window *a, int *w, int *h);
-void SDL_GetDisplayBounds(int displayIndex, SDL_Rect *b);
-void SDL_SetWindowPosition(SDL_Window *a, int x, int y);
-void SDL_SetWindowSize(SDL_Window *a, int w, int h);
-SDL_Result SDL_SetWindowFullscreen(SDL_Window *a, bool b);
-
-void SDL_QueryTexture(SDL_Texture *t, int *a, int *b, int *w, int *h);
-
-void SDL_LockTexture(SDL_Texture *t, void *a, void **data, int *pitch);
-void SDL_UnlockTexture(SDL_Texture *t);
-SDL_Result SDL_UpdateTexture(SDL_Texture *t, const void *a, const void *pixels, int pitch);
-
-bool SDL_HasClipboardText();
-char *SDL_GetClipboardText();
-bool SDL_HasScreenKeyboardSupport();
-
-void SDL_SaveBMP(SDL_Surface *a, const char *path);
-const char *SDL_GetCurrentVideoDriver();
-const char *SDL_GetCurrentAudioDriver();
-
-SDL_Result SDL_RenderReadPixels(SDL_Renderer *a, int b, SDL_PixelFormatEnum format, void *pixels, int pitch);
-
-SDL_RWops *SDL_RWFromMem(void *a, int b);
-SDL_Surface *SDL_LoadBMP_RW(SDL_RWops *a,int b);
 
 #ifdef __cplusplus
 }
