@@ -22,8 +22,8 @@ void SDL_SetBiosCursor(int x, int y) {
 }
 
 #if defined(SDL_USETIMERIRQ) && (!defined(__DJGPP__))
-static double timerSeconds = 0;
-static int timerIrqPos = 0;
+static volatile double timerSeconds = 0;
+static volatile int timerIrqPos = 0;
 typedef void (__interrupt __far* TimerIrqHandler)();
 static TimerIrqHandler oldTimerIrqHandler = NULL;
 #define HARDWARE_TIMER_FREQUENCY 1193180 // 1193180 / 65536  = 18.2 (found in the internet that it's more like 1193181.66666666 instead of 1193180)
@@ -90,7 +90,7 @@ double SDL_GetSeconds() {return glSeconds();}
 typedef void (__interrupt __far* KeyboardHandler)();
 static KeyboardHandler oldKeyboardHandler = NULL;
 
-Uint8 keyPressed[0x100] = {0};
+Uint8 volatile keyPressed[0x100] = {0};
 
 bool isKeyPressed(int scanCode) {
   return keyPressed[scanCode & 0x7f];
@@ -331,12 +331,12 @@ int currentEvent=0;
 Uint8 keyPressed_last[0x100] = {0};
 
 Uint8 *SDL_GetKeyboardState(void *a) {
-  return keyPressed;
+  return keyPressed_last;
 }
 
 void SDL_ResetKeyboard() {
   memset(keyPressed_last,0,sizeof(keyPressed_last));
-  memset(keyPressed,0,sizeof(keyPressed));
+  memset((void*)keyPressed,0,sizeof(keyPressed));
 }
 
 const char *SDL_GetKeyName(SDL_Keycode a) {
