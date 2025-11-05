@@ -96,7 +96,8 @@ SDL_Rect DRectToRect(SDL_DRect *d) {
 }
 
 SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect) {
-  *rect = DRectToRect(&renderer->viewport); return SDL_OK;
+  if (rect != NULL) *rect = DRectToRect(&renderer->viewport); 
+  return SDL_OK;
 }
 
 SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors) {
@@ -821,8 +822,22 @@ SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int width, int height, int d
   return NULL;
 }
 
-SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *a, SDL_Surface *b) {
-  return NULL;
+SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *renderer, SDL_Surface *surface) {
+  SDL_Surface zwo;
+  zwo.format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
+  zwo.pixels = (Uint8*)malloc(surface->w*surface->h*4);
+  zwo.pitch = surface->w*4;
+  zwo.w = surface->w;
+  zwo.h = surface->h;
+  SDL_UpperBlit(surface, NULL, &zwo, NULL);
+  SDL_FreeFormat(zwo.format);
+  RALLOC(SDL_Texture,r);
+  r->pitch = zwo.pitch;
+  r->w = zwo.w;
+  r->h = zwo.h;
+  r->pixels = (unsigned int *)zwo.pixels; 
+  r->format = SDL_PIXELFORMAT_RGBA8888;
+  return r;
 }
 
 void SDL_FreeSurface(SDL_Surface *a) {
@@ -835,6 +850,14 @@ void SDL_FreeSurface(SDL_Surface *a) {
 
 
 SDL_DisplayMode sdlDisplayMode;
+SDL_Rect sdlDisplayBounds;
+
+SDL_Result SDL_GetDisplayBounds(int displayIndex, SDL_Rect *rect) {
+  if (rect != NULL) {
+    *rect = sdlDisplayBounds;
+  }
+  return SDL_OK;
+}
 
 SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags) {
   RALLOC(SDL_Window,r);
@@ -851,6 +874,10 @@ SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint
   }
   sdlDisplayMode.w = w;
   sdlDisplayMode.h = h;
+  sdlDisplayBounds.x = 0;
+  sdlDisplayBounds.y = 0;
+  sdlDisplayBounds.w = w;
+  sdlDisplayBounds.h = h;
   addFocusEvent(true);
   return r;
 }
@@ -899,10 +926,6 @@ SDL_Result SDL_SetWindowFullscreen(SDL_Window *window, Uint32 flags) {
   return SDL_OK;
 }
 
-SDL_Result SDL_GetDisplayBounds(int displayIndex, SDL_Rect *rect) {
-  return SDL_OK;
-}
-
 int SDL_GetWindowDisplayIndex(SDL_Window *window) {
   return 0;
 }
@@ -923,6 +946,12 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, int index, Uint32 flags) {
   r->window = window;
   r->info = sdlRendererDefaultInfo();
   r->renderTarget = NULL;
+  r->scale.x = 1;
+  r->scale.y = 1;
+  r->viewport.x = window->x;
+  r->viewport.y = window->y;
+  r->viewport.w = window->w;
+  r->viewport.h = window->h;
   return r;
 }
 
@@ -1210,7 +1239,7 @@ SDL_Result SDL_RenderCopy(SDL_Renderer *renderer, SDL_Texture *texture, const SD
   int destWidth = glFrameBufferWidth;
   int destHeight = glFrameBufferHeight;
   int destPitch = destWidth*4;
-  if (renderer->renderTarget!=NULL) {
+  if (renderer->renderTarget!=NULL&&renderer->renderTarget!=texture) { // :mad: (renderer->renderTarget!=texture seems to be needed?)
     dest = renderer->renderTarget->pixels;
     destWidth = renderer->renderTarget->w;
     destHeight = renderer->renderTarget->h;

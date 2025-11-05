@@ -2,6 +2,7 @@
 // it's just a first attempt to get the game OpenTyrian running on FreeDOS with WatcomC++ 11
 // you don't need other SDL header files just include this
 // and maybe this will evolve further from a Tyrian implementation wrapper to a more usable SDL
+// Github: https://github.com/kosmonautdnb/WatSDL
 #ifndef __SDL_H__
 #define __SDL_H__
 
@@ -1995,7 +1996,7 @@ SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format);
 void SDL_FreeFormat(SDL_PixelFormat *format);
 const char *SDL_GetPixelFormatName(Uint32 format);
 
-SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer * renderer, SDL_Surface * surface);
+SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *renderer, SDL_Surface *surface);
 SDL_Result SDL_SetRenderTarget(SDL_Renderer *renderer, SDL_Texture *texture);
 SDL_Result SDL_GetRendererOutputSize(SDL_Renderer *renderer, int *w, int *h);
 SDL_Result SDL_RenderSetLogicalSize(SDL_Renderer *renderer, int w, int h);
