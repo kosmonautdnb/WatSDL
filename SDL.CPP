@@ -12,6 +12,42 @@ extern "C" {
 
 // PMODEW is needed for the Irqs to work (not Dos4gw)
 
+SDL_Rect DRectToRect(SDL_DRect *d) {SDL_Rect r; r.x = (int)d->x; r.y = (int)d->y; r.w = (int)d->w; r.h = (int)d->h; return r;}
+
+SDL_Result SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {return SDL_ERROR;}
+void SDL_CloseAudio() {}
+void SDL_PauseAudio(int pause_on) {}
+void SDL_PumpEvents() {}
+Uint32 SDL_GetWindowID(SDL_Window *window) {return window->windowID;}
+SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors) {for(int i = 0; i < ncolors; i++) palette->colors[i+firstcolor]=colors[i];return SDL_OK;}
+SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {return SDL_OK;}
+SDL_Result SDL_LowerBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {return SDL_UpperBlit(src, srcrect, dst, dstrect);}
+void SDL_SetWindowTitle(SDL_Window *window, const char *title) {window->title = title;}
+Uint32 SDL_GetWindowPixelFormat(SDL_Window *window) {return window->pixelFormat;}
+void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h) {window->min_w = min_w; window->min_h = min_h;}
+SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable) {return SDL_OK;}
+bool SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 *Rmask, Uint32 *Gmask, Uint32 *Bmask, Uint32 *Amask) {return false;}
+SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect) {*rect = DRectToRect(&renderer->viewport); return SDL_OK;}
+void SDL_RenderGetScale(SDL_Renderer *renderer, float *scaleX, float *scaleY) {*scaleX = renderer->scale.x; *scaleY = renderer->scale.y;}
+SDL_Result SDL_GetRendererInfo(SDL_Renderer *renderer, SDL_RendererInfo *info) {*info = renderer->info; return SDL_OK;}
+SDL_Result SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode *mode) {return SDL_OK;}
+void SDL_WarpMouseInWindow(SDL_Window *window, int x, int y) {}
+bool SDL_IsGameController(int joystick_index) {return false;}
+SDL_Haptic *SDL_HapticOpen(int device_index) {return NULL;}
+void SDL_HapticClose(SDL_Haptic *haptic) {;}
+SDL_Result SDL_HapticRumbleInit(SDL_Haptic *haptic) {return SDL_ERROR;}
+bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller) {return false;}
+SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index) {return SDL_CONTROLLER_TYPE_UNKNOWN;}
+SDL_Result SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms) {return SDL_ERROR;}
+int SDL_GetNumTouchFingers(SDL_TouchID touchID) {return 0;}
+SDL_Result SDL_LockSurface(SDL_Surface *surface) {return SDL_OK;}
+void SDL_UnlockSurface(SDL_Surface *surface) {}
+void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h) {*w = window->w; *h = window->h;}
+SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {return SDLK_UNKNOWN;}
+bool SDL_IsTextInputActive() {return false;}
+void SDL_StartTextInput() {}
+void SDL_StopTextInput() {}
+
 void SDL_SetBiosCursor(int x, int y) {
     union REGS regs;
     regs.x.eax = 0x200;
@@ -520,19 +556,37 @@ bool addKeyboardEvents() {
   return currentEvent>0;
 }
 
+Uint32 sdlMouseButtonState = 0;
 bool buttonPressed_last[3] = {0};
 double sdlMouseX = 0;
 double sdlMouseY = 0;
+double sdlMouseRelX = 0;
+double sdlMouseRelY = 0;
+
+Uint32 SDL_GetMouseState(int *x, int *y) {
+  if (x != NULL) *x=(int)sdlMouseX;
+  if (y != NULL) *y=(int)sdlMouseY;
+  return sdlMouseButtonState;
+}
+
+Uint32 SDL_GetRelativeMouseState(int *x, int *y) {
+  if (x != NULL) *x=(int)sdlMouseRelX;
+  if (y != NULL) *y=(int)sdlMouseRelY;
+  return sdlMouseButtonState;
+}
 
 bool addMouseEvents() {
   double dx,dy;
   glNextMouseDelta(&dx,&dy);
+  sdlMouseRelX = (int)dx;
+  sdlMouseRelY = (int)dy;
   sdlMouseX += dx;
   sdlMouseY += dy;
   if (sdlMouseX<0)sdlMouseX=0;
   if (sdlMouseY<0)sdlMouseY=0;
   if (sdlMouseX>glFrameBufferWidth-1) sdlMouseX=glFrameBufferWidth-1;
   if (sdlMouseY>glFrameBufferHeight-1) sdlMouseY=glFrameBufferHeight-1;
+  sdlMouseButtonState = 0;
   for (int i = 0; i < 0x03; i++) {
     bool buttonPressed = glMouseButtons() & (1<<i);
     if (buttonPressed != buttonPressed_last[i]) {
@@ -545,6 +599,7 @@ bool addMouseEvents() {
       case 1: j = SDL_BUTTON_RIGHT; break;
       case 2: j = SDL_BUTTON_MIDDLE; break;
       }
+      sdlMouseButtonState|=(Uint32)j;
       v->button.button = (Uint8)j;
       v->button.x = sdlMouseX;
       v->button.y = sdlMouseY;

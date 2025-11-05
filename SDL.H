@@ -13,6 +13,7 @@
 #include <direct.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +61,7 @@ typedef signed int Sint64; // 32 bit, 64 bit support is lacking in WatcomC++ 11
 #define atanf(__x__) (float)atan(__x__)
 #define atan2f(__x__,__y__) (float)atan2(__x__,__y__)
 #define powf(__x__,__y__) (float)pow(__x__,__y__)
+#define expf(__x__) (float)exp(__x__)
 
 #define snprintf_x4(__a__,__b__,__c__,__d__) (sprintf(__a__,__c__,__d__) + (((char*)__a__)[(__b__)-1]=0))
 #define snprintf_x5(__a__,__b__,__c__,__d__,__e__) (sprintf(__a__,__c__,__d__,__e__) + (((char*)__a__)[(__b__)-1]=0))
@@ -69,10 +71,11 @@ typedef signed int Sint64; // 32 bit, 64 bit support is lacking in WatcomC++ 11
 static inline double round(const double a) {return floor(a+0.5);}
 #endif
 
-// -------------------------------
-
 #define SDL_fabsf fabsf
 #define SDL_static_cast(__t__,__v__) ((__t__)__v__)
+#define SDL_min(x, y) (((x) < (y)) ? (x) : (y))
+#define SDL_max(x, y) (((x) > (y)) ? (x) : (y))
+#define SDL_clamp(x, a, b) (((x) < (a)) ? (a) : (((x) > (b)) ? (b) : (x)))
 
 // -------------------------------
 
@@ -629,6 +632,12 @@ typedef enum SDL_Keymod
 #define SDL_DISABLE 0
 #define SDL_ENABLE 1
 
+typedef Sint32 SDL_TouchID; // :mad: originally Sint64
+
+typedef struct SDL_Haptic {
+  int a; // :mad: todo
+} SDL_Haptic;
+
 typedef enum SDL_WindowFlags
 {
     SDL_WINDOW_FULLSCREEN = 0x00000001,
@@ -865,6 +874,14 @@ typedef struct SDL_Color
 #define SDL_Colour SDL_Color
 static inline SDL_Color SDL_Color_(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 0xff) {SDL_Color r2; r2.r = r; r2.g=g; r2.b=b; r2.a=a; return r2;}
 
+typedef struct SDL_Palette
+{
+    int ncolors;
+    SDL_Color *colors;
+    Uint32 version;
+    int refcount;
+} SDL_Palette;
+
 typedef struct SDL_AudioCVT {
   void *buf;
   int len_mult;
@@ -996,13 +1013,13 @@ SDL_FORCE_INLINE SDL_bool SDL_FRectEquals(const SDL_FRect *a, const SDL_FRect *b
     return SDL_FRectEqualsEpsilon(a, b, SDL_FLT_EPSILON);
 }
 
-typedef struct SDL_Palette
-{
-    int ncolors;
-    SDL_Color *colors;
-    Uint32 version;
-    int refcount;
-} SDL_Palette;
+typedef struct SDL_DisplayMode {
+    Uint32 format;
+    int w;
+    int h;
+    int refresh_rate;
+    void *driverdata;
+} SDL_DisplayMode;
 
 typedef struct SDL_PixelFormat
 {
@@ -1077,7 +1094,20 @@ typedef struct SDL_Window {
   // :mad: didn't found that struct in original sdl
   int x,y,w,h;
   int flags;
+  Uint32 windowID;
+  const char *title;
+  Uint32 pixelFormat;
+  int min_w, min_h;
 } SDL_Window;
+
+typedef struct SDL_RendererInfo {
+    const char *name;
+    Uint32 flags;
+    Uint32 num_texture_formats;
+    Uint32 texture_formats[16];
+    int max_texture_width;
+    int max_texture_height;
+} SDL_RendererInfo;
 
 typedef struct SDL_Renderer {
   // :mad: a lot is missing here
@@ -1104,6 +1134,7 @@ typedef struct SDL_Renderer {
   SDL_FPoint scale_backup;
   SDL_FPoint dpi_scale;
   SDL_bool relative_scaling;
+  SDL_RendererInfo info;
 } SDL_Renderer;
 
 typedef enum SDL_BlendMode
@@ -1874,6 +1905,7 @@ typedef union SDL_Event
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
+
 void SDL_SetBiosCursor(int x, int y);
 const char *SDL_GetCurrentVideoDriver();
 const char *SDL_GetCurrentAudioDriver();
@@ -1893,11 +1925,15 @@ void SDL_Delay(double ms);
 void SDL_Quit();
 void SDL_free(void *mem);
 
+void SDL_PumpEvents();
 int SDL_PushEvent(SDL_Event *event);
 int SDL_PollEvent(SDL_Event *event);
 int SDL_WaitEvent(SDL_Event *event);
 Uint8 SDL_EventState(Uint32 type, int state);
 
+SDL_Result SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained);
+void SDL_CloseAudio();
+void SDL_PauseAudio(int pause_on);
 SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device, int iscapture, const SDL_AudioSpec *desired, SDL_AudioSpec *obtained, int allowed_changes);
 void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on);
 void SDL_CloseAudioDevice(SDL_AudioDeviceID dev);
@@ -1912,6 +1948,9 @@ Uint8 *SDL_GetKeyboardState(int *numkeys);
 void SDL_ResetKeyboard();
 const char *SDL_GetKeyName(SDL_Keycode key);
 SDL_Keymod SDL_GetModState();
+SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode);
+
+int SDL_GetNumTouchFingers(SDL_TouchID touchID);
 
 int SDL_JoystickEventState(int state);
 int SDL_JoystickGetAxis(SDL_Joystick *joystick, int axis);
@@ -1927,13 +1966,27 @@ int SDL_JoystickNumAxes(SDL_Joystick *joystick);
 int SDL_JoystickNumButtons(SDL_Joystick *joystick);
 int SDL_JoystickNumHats(SDL_Joystick *joystick);
 SDL_GameController *SDL_GameControllerOpen(int joystick_index);
+bool SDL_IsGameController(int joystick_index);
+SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index);
+
 int SDL_GameControllerGetButton(SDL_GameController *gamecontroller,SDL_GameControllerButton button);
 int SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,SDL_GameControllerAxis axis);
 void SDL_GameControllerClose(SDL_GameController *gamecontroller);
+bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller);
+SDL_Result SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
+
+SDL_Haptic *SDL_HapticOpen(int device_index);
+void SDL_HapticClose(SDL_Haptic *haptic);
+SDL_Result SDL_HapticRumbleInit(SDL_Haptic *haptic);
+
 int SDL_ShowCursor(int toggle);
+Uint32 SDL_GetMouseState(int *x, int *y);
+Uint32 SDL_GetRelativeMouseState(int *x, int *y);
 int SDL_SetRelativeMouseMode(bool enabled);
 
+bool SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 *Rmask, Uint32 *Gmask, Uint32 *Bmask, Uint32 *Amask);
 Uint32 SDL_MapRGB(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b);
+SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors);
 
 SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format);
 void SDL_FreeFormat(SDL_PixelFormat *format);
@@ -1950,10 +2003,14 @@ void SDL_RenderPresent(SDL_Renderer *renderer);
 SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect);
 void SDL_DestroyRenderer(SDL_Renderer *renderer);
 SDL_Result SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect, Uint32 format, void *pixels, int pitch);
-void SDL_DestroyTexture(SDL_Texture *texture);
+SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect);
+void SDL_RenderGetScale(SDL_Renderer *renderer, float *scaleX, float *scaleY);
+SDL_Result SDL_GetRendererInfo(SDL_Renderer *renderer, SDL_RendererInfo *info);
+SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable);
 
 int SDL_GetNumVideoDisplays();
 SDL_Result SDL_GetDisplayBounds(int displayIndex, SDL_Rect *rect);
+SDL_Result SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode *mode);
 
 SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags);
 void SDL_SetWindowIcon(SDL_Window *window, SDL_Surface *icon);
@@ -1966,6 +2023,12 @@ void SDL_GetWindowSize(SDL_Window *window, int *w, int *h);
 void SDL_SetWindowPosition(SDL_Window *window, int x, int y);
 void SDL_SetWindowSize(SDL_Window *window, int w, int h);
 SDL_Result SDL_SetWindowFullscreen(SDL_Window *window, Uint32 flags);
+Uint32 SDL_GetWindowID(SDL_Window *window);
+void SDL_WarpMouseInWindow(SDL_Window *window, int x, int y);
+void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h);
+void SDL_SetWindowTitle(SDL_Window *window, const char *title);
+Uint32 SDL_GetWindowPixelFormat(SDL_Window *window);
+void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h);
 
 SDL_Surface *SDL_CreateRGBSurface(Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
 SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int width, int height, int depth, int pitch, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
@@ -1973,6 +2036,11 @@ SDL_Surface *SDL_LoadBMP_RW(SDL_RWops * src, int freesrc);
 void SDL_SaveBMP(SDL_Surface *surface, const char *file);
 void SDL_FillRect(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
 void SDL_FreeSurface(SDL_Surface *surface);
+#define SDL_BlitSurface SDL_UpperBlit
+SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect);
+SDL_Result SDL_LowerBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect);
+SDL_Result SDL_LockSurface(SDL_Surface *surface);
+void SDL_UnlockSurface(SDL_Surface *surface);
 
 SDL_Result SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode blendMode);
 SDL_Result SDL_SetTextureAlphaMod(SDL_Texture *texture, Uint8 alpha);
@@ -1980,10 +2048,15 @@ SDL_Result SDL_QueryTexture(SDL_Texture *texture, Uint32 *format, int *access, i
 SDL_Result SDL_LockTexture(SDL_Texture *texture, const SDL_Rect *rect, void **pixels, int *pitch);
 void SDL_UnlockTexture(SDL_Texture *texture);
 SDL_Result SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void *pixels, int pitch);
+void SDL_DestroyTexture(SDL_Texture *texture);
 
 bool SDL_HasClipboardText();
 char *SDL_GetClipboardText();
 bool SDL_HasScreenKeyboardSupport();
+
+bool SDL_IsTextInputActive();
+void SDL_StartTextInput();
+void SDL_StopTextInput();
 
 SDL_RWops *SDL_RWFromMem(void *mem, int size);
 
