@@ -1,3 +1,14 @@
+// --
+// WatSDL
+// this is not the original SDL (SDL2) the original SDL can be found at https://github.com/libsdl-org/SDL
+// --
+// Github: https://github.com/kosmonautdnb/WatSDL
+// by Stefan Mader in 2025
+// --
+// it's just a first attempt to get the game OpenTyrian running on FreeDOS with WatcomC++ 11
+// you don't need other SDL header files just include this
+// and maybe this will evolve further from a Tyrian implementation wrapper to a more usable SDL
+// --
 #include "sdl.h"
 #include "gl.h"
 #include <stdlib.h>
