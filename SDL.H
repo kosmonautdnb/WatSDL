@@ -783,7 +783,7 @@ typedef enum
 
 #define SDL_PIXELFLAG(X) (((X)>>28)&0x0F)
 #define SDL_PIXELTYPE(X) (((X)>>24)&0x0F)
-#define SDL_PIXELORDER(X)(((X)>>20)&0x0F)
+#define SDL_PIXELORDER(X) (((X)>>20)&0x0F)
 #define SDL_PIXELLAYOUT(X) (((X)>>16)&0x0F)
 #define SDL_BITSPERPIXEL(X) (((X)>>8)&0xFF)
 #define SDL_BYTESPERPIXEL(X) (SDL_ISPIXELFORMAT_FOURCC(X)?((((X) == SDL_PIXELFORMAT_YUY2)||((X)==SDL_PIXELFORMAT_UYVY)||((X)==SDL_PIXELFORMAT_YVYU))?2:1):(((X)>>0)&0xFF))
@@ -1988,6 +1988,9 @@ bool SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 *Rmask, Uint32 *
 Uint32 SDL_MapRGB(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b);
 SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors);
 
+SDL_Palette *SDL_AllocPalette(int numColors); // :mad:
+void SDL_FreePalette(SDL_Palette *palette); // :mad:
+
 SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format);
 void SDL_FreeFormat(SDL_PixelFormat *format);
 const char *SDL_GetPixelFormatName(Uint32 format);
@@ -2000,7 +2003,7 @@ SDL_Texture *SDL_CreateTexture(SDL_Renderer *renderer, Uint32 format, int access
 SDL_Result SDL_SetRenderDrawColor(SDL_Renderer *renderer, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 SDL_Result SDL_RenderClear(SDL_Renderer *renderer);
 void SDL_RenderPresent(SDL_Renderer *renderer);
-SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect);
+SDL_Result SDL_RenderCopy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect);
 void SDL_DestroyRenderer(SDL_Renderer *renderer);
 SDL_Result SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect, Uint32 format, void *pixels, int pitch);
 SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect);

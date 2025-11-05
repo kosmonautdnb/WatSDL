@@ -12,41 +12,114 @@ extern "C" {
 
 // PMODEW is needed for the Irqs to work (not Dos4gw)
 
-SDL_Rect DRectToRect(SDL_DRect *d) {SDL_Rect r; r.x = (int)d->x; r.y = (int)d->y; r.w = (int)d->w; r.h = (int)d->h; return r;}
+SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable) {
+  return SDL_OK;
+}
 
-SDL_Result SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {return SDL_ERROR;}
-void SDL_CloseAudio() {}
-void SDL_PauseAudio(int pause_on) {}
-void SDL_PumpEvents() {}
-Uint32 SDL_GetWindowID(SDL_Window *window) {return window->windowID;}
-SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors) {for(int i = 0; i < ncolors; i++) palette->colors[i+firstcolor]=colors[i];return SDL_OK;}
-SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {return SDL_OK;}
-SDL_Result SDL_LowerBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {return SDL_UpperBlit(src, srcrect, dst, dstrect);}
-void SDL_SetWindowTitle(SDL_Window *window, const char *title) {window->title = title;}
-Uint32 SDL_GetWindowPixelFormat(SDL_Window *window) {return window->pixelFormat;}
-void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h) {window->min_w = min_w; window->min_h = min_h;}
-SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable) {return SDL_OK;}
-bool SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 *Rmask, Uint32 *Gmask, Uint32 *Bmask, Uint32 *Amask) {return false;}
-SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect) {*rect = DRectToRect(&renderer->viewport); return SDL_OK;}
-void SDL_RenderGetScale(SDL_Renderer *renderer, float *scaleX, float *scaleY) {*scaleX = renderer->scale.x; *scaleY = renderer->scale.y;}
-SDL_Result SDL_GetRendererInfo(SDL_Renderer *renderer, SDL_RendererInfo *info) {*info = renderer->info; return SDL_OK;}
-SDL_Result SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode *mode) {return SDL_OK;}
-void SDL_WarpMouseInWindow(SDL_Window *window, int x, int y) {}
-bool SDL_IsGameController(int joystick_index) {return false;}
-SDL_Haptic *SDL_HapticOpen(int device_index) {return NULL;}
-void SDL_HapticClose(SDL_Haptic *haptic) {;}
-SDL_Result SDL_HapticRumbleInit(SDL_Haptic *haptic) {return SDL_ERROR;}
-bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller) {return false;}
-SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index) {return SDL_CONTROLLER_TYPE_UNKNOWN;}
-SDL_Result SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms) {return SDL_ERROR;}
-int SDL_GetNumTouchFingers(SDL_TouchID touchID) {return 0;}
-SDL_Result SDL_LockSurface(SDL_Surface *surface) {return SDL_OK;}
-void SDL_UnlockSurface(SDL_Surface *surface) {}
-void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h) {*w = window->w; *h = window->h;}
-SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {return SDLK_UNKNOWN;}
-bool SDL_IsTextInputActive() {return false;}
-void SDL_StartTextInput() {}
-void SDL_StopTextInput() {}
+bool SDL_IsGameController(int joystick_index) {
+  return false;
+}
+
+SDL_Haptic *SDL_HapticOpen(int device_index) {
+  return NULL;
+}
+
+void SDL_HapticClose(SDL_Haptic *haptic) {
+}
+
+SDL_Result SDL_HapticRumbleInit(SDL_Haptic *haptic) {
+  return SDL_ERROR;
+}
+
+bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller) {
+  return false;
+}
+
+SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index) {
+  return SDL_CONTROLLER_TYPE_UNKNOWN;
+}
+
+SDL_Result SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms) {
+  return SDL_ERROR;
+}
+
+int SDL_GetNumTouchFingers(SDL_TouchID touchID) {
+  return 0;
+}
+
+SDL_Result SDL_LockSurface(SDL_Surface *surface) {
+  return SDL_OK;
+}
+
+void SDL_UnlockSurface(SDL_Surface *surface) {
+}
+
+void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h) {
+  if (w != NULL) *w = window->w; 
+  if (h != NULL) *h = window->h;
+}
+
+bool SDL_IsTextInputActive() {
+  return false;
+}
+
+void SDL_StartTextInput() {
+}
+
+void SDL_StopTextInput() {
+}
+
+void SDL_RenderGetScale(SDL_Renderer *renderer, float *scaleX, float *scaleY) {
+  if (scaleX != NULL) *scaleX = renderer->scale.x; 
+  if (scaleY != NULL) *scaleY = renderer->scale.y;
+}
+
+void SDL_SetWindowTitle(SDL_Window *window, const char *title) {
+  window->title = title;
+}
+
+void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h) {
+  window->min_w = min_w; window->min_h = min_h;
+}
+
+Uint32 SDL_GetWindowPixelFormat(SDL_Window *window) {
+  return window->pixelFormat;
+}
+
+SDL_Rect DRectToRect(SDL_DRect *d) {
+  SDL_Rect r; 
+  r.x = (int)d->x; 
+  r.y = (int)d->y; 
+  r.w = (int)d->w; 
+  r.h = (int)d->h; 
+  return r;
+}
+
+SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect) {
+  *rect = DRectToRect(&renderer->viewport); return SDL_OK;
+}
+
+SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors) {
+  for(int i = 0; i < ncolors; i++) palette->colors[i+firstcolor]=colors[i];
+  return SDL_OK;
+}
+
+SDL_Result SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
+  return SDL_ERROR;
+}
+
+void SDL_CloseAudio() {
+}
+
+void SDL_PauseAudio(int pause_on) {
+}
+
+void SDL_PumpEvents() {
+}
+
+Uint32 SDL_GetWindowID(SDL_Window *window) {
+  return window->windowID;
+}
 
 void SDL_SetBiosCursor(int x, int y) {
     union REGS regs;
@@ -255,6 +328,7 @@ SDL_Result SDL_SetRenderDrawColor(SDL_Renderer *renderer, Uint8 r, Uint8 g, Uint
 }
 
 void SDL_FillRect(SDL_Surface *dst, const SDL_Rect *rect, Uint32 color) {
+  if (dst == NULL) return;
   int dx0 = 0;
   int dy0 = 0;
   int dx1 = dx0 + dst->w;
@@ -513,8 +587,7 @@ const char *SDL_GetKeyName(SDL_Keycode key) {
   CONVSC2(SDLK_RSHIFT,SDL_SCANCODE_RSHIFT)\
   CONVSC2(SDLK_KP_5,SDL_SCANCODE_KP_5)
 
-
-SDL_KeyCode convertScanCodeToSymbolic(int scancode) {
+SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {
   switch(scancode) {
     CONVSCM
   }
@@ -542,7 +615,7 @@ bool addKeyboardEvents() {
       v->type = keyPressed[i] ? SDL_KEYDOWN : SDL_KEYUP;
       v->key.state = keyPressed[i] ? 1 : 0;
       v->key.keysym.scancode = i;
-      v->key.keysym.sym = convertScanCodeToSymbolic(i);
+      v->key.keysym.sym = SDL_GetKeyFromScancode((SDL_Scancode)i);
       v->key.keysym.mod = 0;
       if (keyPressed[SDL_SCANCODE_LCTRL]) v->key.keysym.mod|=(int)KMOD_LCTRL;
       if (keyPressed[SDL_SCANCODE_RCTRL]) v->key.keysym.mod|=(int)KMOD_RCTRL;
@@ -562,6 +635,11 @@ double sdlMouseX = 0;
 double sdlMouseY = 0;
 double sdlMouseRelX = 0;
 double sdlMouseRelY = 0;
+
+void SDL_WarpMouseInWindow(SDL_Window *window, int x, int y) {
+  sdlMouseX = window->x + x;
+  sdlMouseY = window->y + y;
+}
 
 Uint32 SDL_GetMouseState(int *x, int *y) {
   if (x != NULL) *x=(int)sdlMouseX;
@@ -722,10 +800,16 @@ SDL_Keymod SDL_GetModState() {
   return (SDL_Keymod)r;
 }
 
+Uint32 sdlGetFormat(int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask) {
+  if ((depth == 8) && (Rmask==0) && (Gmask==0) && (Bmask==0) && (Amask==0)) return SDL_PIXELFORMAT_INDEX8;
+  if (depth == 32) return SDL_PIXELFORMAT_RGBA8888;
+  return SDL_PIXELFORMAT_RGBA8888;
+}
+
 SDL_Surface *SDL_CreateRGBSurface(Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask) {
   RALLOC(SDL_Surface,r);
-  r->format = _RALLOC(SDL_PixelFormat,1);
-  r->format->BitsPerPixel = (Uint8)depth;
+  Uint32 format = sdlGetFormat(depth,Rmask,Gmask,Bmask,Amask);
+  r->format = SDL_AllocFormat(format);
   r->pixels = (Uint8*)malloc(width*height*(depth/8));
   r->pitch = width*(depth/8);
   r->w = width;
@@ -744,10 +828,13 @@ SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *a, SDL_Surface *b) {
 void SDL_FreeSurface(SDL_Surface *a) {
   if (a!=NULL) {
     RDELETE(a->pixels);
-    RDELETE(a->format);
+    SDL_FreeFormat(a->format);    
   }
   RDELETE(a);
 }
+
+
+SDL_DisplayMode sdlDisplayMode;
 
 SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags) {
   RALLOC(SDL_Window,r);
@@ -756,11 +843,14 @@ SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint
   r->w = w;
   r->h = h;
   r->flags = flags;
+  r->pixelFormat = SDL_PIXELFORMAT_RGBA8888;
   glDone();
   if (!glVesa(w,h,32)) {
     printf("Vesa: SDL window:%dx%d failed!\n",w,h);
     SDL_Quit();
   }
+  sdlDisplayMode.w = w;
+  sdlDisplayMode.h = h;
   addFocusEvent(true);
   return r;
 }
@@ -792,8 +882,17 @@ void SDL_SetWindowSize(SDL_Window *window, int w, int h) {
     printf("Vesa: SDL window:%dx%d failed!\n",w,h);
     SDL_Quit();
   }
+  sdlDisplayMode.w = w;
+  sdlDisplayMode.h = h;
   window->w = w;
   window->h = h;
+}
+
+SDL_Result SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode *mode) {
+  sdlDisplayMode.format=SDL_PIXELFORMAT_RGB888;
+  sdlDisplayMode.refresh_rate = 50;
+  *mode = sdlDisplayMode;
+  return SDL_OK;
 }
 
 SDL_Result SDL_SetWindowFullscreen(SDL_Window *window, Uint32 flags) {
@@ -808,10 +907,27 @@ int SDL_GetWindowDisplayIndex(SDL_Window *window) {
   return 0;
 }
 
+SDL_RendererInfo sdlRendererDefaultInfo() {
+  SDL_RendererInfo r;
+  r.name = "WatcomGL";
+  r.flags = 0;
+  r.num_texture_formats = 1;
+  r.texture_formats[0] = SDL_PIXELFORMAT_RGB888;
+  r.max_texture_width = 16384; // can be more
+  r.max_texture_height = 16384; // can be more
+  return r;
+}
+
 SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, int index, Uint32 flags) {
   RALLOC(SDL_Renderer,r);
   r->window = window;
+  r->info = sdlRendererDefaultInfo();
+  r->renderTarget = NULL;
   return r;
+}
+
+SDL_Result SDL_GetRendererInfo(SDL_Renderer *renderer, SDL_RendererInfo *info) {
+  *info = renderer->info; return SDL_OK;
 }
                                             
 SDL_Result SDL_SetRenderTarget(SDL_Renderer *renderer, SDL_Texture *texture) {
@@ -837,10 +953,10 @@ void SDL_DestroyRenderer(SDL_Renderer *renderer) {
 
 SDL_Texture *SDL_CreateTexture(SDL_Renderer *renderer, Uint32 format, int access, int w, int h) {
   RALLOC(SDL_Texture,r);
-  r->pitch = w * sizeof(unsigned int);
+  r->pitch = w * SDL_BYTESPERPIXEL(format);
   r->w = w;
   r->h = h;
-  r->pixels = _RALLOC(unsigned int,w*h); 
+  r->pixels = (unsigned int*)_RALLOC(unsigned char,w*h*SDL_BYTESPERPIXEL(format)); 
   r->format = format;
   return r;
 }
@@ -860,6 +976,205 @@ SDL_Result SDL_LockTexture(SDL_Texture *texture, const SDL_Rect *rect, void **pi
   if (pixels != NULL) *pixels = (void*)texture->pixels;
   if (pitch != NULL) *pitch = texture->pitch;
   return SDL_OK;
+}
+
+void SDL_UnlockTexture(SDL_Texture *t) {
+}
+
+SDL_Result SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode blendMode) {
+  texture->blendMode = blendMode;
+  return SDL_OK;
+}
+
+SDL_Result SDL_SetTextureAlphaMod(SDL_Texture *texture, Uint8 alpha) {
+  texture->modMode = alpha;
+  return SDL_OK;
+}
+
+int sdlRShift = 0;
+int sdlGShift = 0;
+int sdlBShift = 0;
+int sdlAShift = 0;
+int sdlRBits = 0;
+int sdlGBits = 0;
+int sdlBBits = 0;
+int sdlABits = 0;
+bool SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 *Rmask, Uint32 *Gmask, Uint32 *Bmask, Uint32 *Amask) {
+  if (bpp != NULL) *bpp = SDL_BYTESPERPIXEL(format)*8; // sadly this would be 3 for XRGB8888
+  if (Rmask != NULL) *Rmask = 0;
+  if (Gmask != NULL) *Gmask = 0;
+  if (Bmask != NULL) *Bmask = 0;
+  if (Amask != NULL) *Amask = 0;
+  int bits[4];
+  switch(SDL_PIXELLAYOUT(format)) {
+  case SDL_PACKEDLAYOUT_332: bits[0]=3; bits[1]=3; bits[2]=2; bits[3]=0; break;
+  case SDL_PACKEDLAYOUT_4444: bits[0]=4; bits[1]=4; bits[2]=4; bits[3]=4; break;
+  case SDL_PACKEDLAYOUT_1555: bits[0]=5; bits[1]=5; bits[2]=5; bits[3]=1; break;
+  case SDL_PACKEDLAYOUT_5551: bits[0]=5; bits[1]=5; bits[2]=5; bits[3]=1; break;
+  case SDL_PACKEDLAYOUT_565: bits[0]=5; bits[1]=6; bits[2]=5; bits[3]=0; break;
+  case SDL_PACKEDLAYOUT_8888: bits[0]=8; bits[1]=8; bits[2]=8; bits[3]=8; break;
+  case SDL_PACKEDLAYOUT_2101010: bits[0]=10; bits[1]=10; bits[2]=10; bits[3]=2; break;
+  case SDL_PACKEDLAYOUT_1010102: bits[0]=10; bits[1]=10; bits[2]=10; bits[3]=2; break;
+  default:
+  case 0: bits[0]=0; bits[1]=0; bits[2]=0; bits[3]=0; break;
+  }
+  int ord[4];
+  switch(SDL_PIXELORDER(format)) {
+  case SDL_ARRAYORDER_RGB: ord[0]=0; ord[1]=1; ord[2]=2; ord[3]=-1; break;
+  case SDL_ARRAYORDER_RGBA: ord[0]=0; ord[1]=1; ord[2]=2; ord[3]=3; break;
+  case SDL_ARRAYORDER_ARGB: ord[0]=2; ord[1]=1; ord[2]=0; ord[3]=3; break;
+  case SDL_ARRAYORDER_BGR: ord[0]=2; ord[1]=1; ord[2]=0; ord[3]=-1; break;
+  case SDL_ARRAYORDER_BGRA: ord[0]=2; ord[1]=1; ord[2]=0; ord[3]=3; break;
+  case SDL_ARRAYORDER_ABGR: ord[0]=0; ord[1]=1; ord[2]=2; ord[3]=3; break;
+  default:
+  case 0: ord[0]=-1; ord[1]=-1; ord[2]=-1; ord[3]=-1; break;
+  }
+  int startBit = 0;
+  for (int i = 0; i < 4; i++) {
+    int bs = bits[i];
+    int b = ((1 << bs)-1)<<startBit;
+    switch(ord[i]) {
+    case 0: if (*Rmask!=NULL) *Rmask=b; sdlRShift=startBit; sdlRBits=bs; break;
+    case 1: if (*Gmask!=NULL) *Gmask=b; sdlGShift=startBit; sdlGBits=bs; break;
+    case 2: if (*Bmask!=NULL) *Bmask=b; sdlBShift=startBit; sdlBBits=bs; break;
+    case 3: if (*Amask!=NULL) *Amask=b; sdlAShift=startBit; sdlABits=bs; break;
+    }  
+    startBit+=bs;
+  }
+  return true;
+}
+
+SDL_Palette *SDL_AllocPalette(int numColors) {
+  RALLOC(SDL_Palette,r);
+  r->ncolors = numColors;
+  r->colors = _RALLOC(SDL_Color,numColors);
+  return r;
+}
+
+void SDL_FreePalette(SDL_Palette *palette) {
+  if (palette != NULL && palette->colors != NULL) RDELETE(palette->colors);
+}
+
+SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format) {
+  RALLOC(SDL_PixelFormat,r);
+  r->BitsPerPixel = SDL_BYTESPERPIXEL(pixel_format)*8; // sadly this would be 24 for XRGB8888 format
+  r->BytesPerPixel = r->BitsPerPixel/8;
+  SDL_PixelFormatEnumToMasks(pixel_format, NULL, &r->Rmask, &r->Gmask, &r->Bmask, &r->Amask);
+  r->Rloss=1<<(8-sdlRBits);
+  r->Gloss=1<<(8-sdlGBits);
+  r->Bloss=1<<(8-sdlBBits);
+  r->Aloss=1<<(8-sdlABits);
+  r->Rshift=sdlRShift;
+  r->Gshift=sdlGShift;
+  r->Bshift=sdlBShift;
+  r->Ashift=sdlAShift;
+  r->palette=NULL;
+  switch(SDL_PIXELTYPE(pixel_format)) {
+  case SDL_PIXELTYPE_INDEX8:r->palette=SDL_AllocPalette(256);break;
+  }
+  return r;
+}
+
+void SDL_FreeFormat(SDL_PixelFormat *format) {
+  if (format != NULL) SDL_FreePalette(format->palette);
+  RDELETE(format);
+}
+
+void SDL_ShowWindow(SDL_Window *window) {
+}
+
+SDL_Result SDL_RenderClear(SDL_Renderer *renderer) {
+  memset(glFrameBuffer,0,glFrameBufferWidth*glFrameBufferHeight*sizeof(unsigned int));
+  return SDL_OK;
+}
+
+void SDL_RenderPresent(SDL_Renderer *renderer) {
+  glRefresh();
+}
+
+SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  if (src == NULL) return SDL_ERROR;
+  if (dst == NULL) return SDL_ERROR;
+  int minx = 0;
+  int miny = 0;
+  int maxx = dst->w;
+  int maxy = dst->h;
+  int sx0 = 0;
+  int sy0 = 0;
+  int sx1 = sx0+src->w;
+  int sy1 = sy0+src->h;
+  int dx0 = 0;
+  int dy0 = 0;
+  int dx1 = dx0+dst->w;
+  int dy1 = dy0+dst->h;
+  if (srcrect!=NULL) {
+    sx0 = srcrect->x;
+    sy0 = srcrect->y;
+    sx1 = sx0+srcrect->w;
+    sy1 = sy0+srcrect->h;
+  }
+  if (dstrect!=NULL) {
+    dx0 = dstrect->x;
+    dy0 = dstrect->y;
+    dx1 = dx0+dstrect->w;
+    dy1 = dy0+dstrect->h;
+  }
+  if (dx0>=maxx) return SDL_ERROR;
+  if (dx1<=minx) return SDL_ERROR;
+  if (dy0>=maxy) return SDL_ERROR;
+  if (dy1<=miny) return SDL_ERROR;
+  double sfx0 = sx0;
+  double sfx1 = sx1;
+  double sfy0 = sy0;
+  double sfy1 = sy1;
+  double ax = (double)(sx1-sx0)/(dx1-dx0);
+  double ay = (double)(sy1-sy0)/(dy1-dy0);
+  if (dx0<minx) {
+    sfx0 += (minx-dx0)*ax;
+    dx0 = minx;
+  }
+  if (dy0<miny) {
+    sfy0 += (miny-dy0)*ay;
+    dy0 = miny;
+  }
+  if (dx1>maxx) {
+    sfx1 -= (dx1-maxx)*ax;
+    dx1 = maxx;
+  }
+  if (dy1>maxy) {
+    sfy1 -= (dy1-maxy)*ay;
+    dy1 = maxy;
+  }
+
+  int f=src->format->BytesPerPixel==1?1:0;
+  f |= dst->format->BytesPerPixel==1?2:0;
+  Uint32 *spal=NULL;
+  if (src->format->palette!=NULL) spal=(Uint32 *)src->format->palette->colors;
+
+  for (int y = dy0; y < dy1; y++) {
+    const int sy = (int)((y - dy0)*ay + sfy0);
+    if (sy >= 0 && sy < src->h) {
+      unsigned char *s = (unsigned char*)((Uint32)src->pixels+sy*src->pitch);
+      unsigned char *d = (unsigned char*)((Uint32)dst->pixels+y*dst->pitch);
+      for (int x = dx0; x < dx1; x++) {
+        const int sx =(int)((x - dx0)*ax + sx0);
+        if (sx >= 0 && sx < src->w) {
+          switch(f) {
+            case 1*0+2*0:*((unsigned int*)&d[x*4])=*((unsigned int*)&s[sx*4]);break;
+            case 1*1+2*0:*((unsigned int*)&d[x*4])=spal[*((unsigned char*)&s[sx])];break;
+            case 1*0+2*1:*((unsigned char*)&d[x])=*((unsigned int*)&s[sx*4]);break;
+            case 1*1+2*1:*((unsigned char*)&d[x])=*((unsigned char*)&s[sx]);break;
+          }
+        }
+      }
+    }
+  }
+
+  return SDL_OK;
+}
+
+SDL_Result SDL_LowerBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  return SDL_UpperBlit(src, srcrect, dst, dstrect);
 }
 
 SDL_Result SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void *pixels, int pitch) {
@@ -889,58 +1204,27 @@ SDL_Result SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const v
   return SDL_OK;
 }
 
-void SDL_UnlockTexture(SDL_Texture *t) {
-}
-
-SDL_Result SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode blendMode) {
-  texture->blendMode = blendMode;
-  return SDL_OK;
-}
-
-SDL_Result SDL_SetTextureAlphaMod(SDL_Texture *texture, Uint8 alpha) {
-  texture->modMode = alpha;
-  return SDL_OK;
-}
-
-SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format) {
-  RALLOC(SDL_PixelFormat,r);
-  switch(pixel_format) {
-  case SDL_PIXELFORMAT_RGB888: {
-    r->BitsPerPixel = 32;
-  } break;
-  }
-  return r;
-}
-
-void SDL_FreeFormat(SDL_PixelFormat *format) {
-  RDELETE(format);
-}
-
-void SDL_ShowWindow(SDL_Window *window) {
-}
-
-SDL_Result SDL_RenderClear(SDL_Renderer *renderer) {
-  memset(glFrameBuffer,0,glFrameBufferWidth*glFrameBufferHeight*sizeof(unsigned int));
-  return SDL_OK;
-}
-
-void SDL_RenderPresent(SDL_Renderer *renderer) {
-  glRefresh();
-}
-
-SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect) {
+SDL_Result SDL_RenderCopy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect) {
   if (texture == NULL) return SDL_ERROR;
-  if (glFrameBuffer == NULL) return SDL_ERROR;
-  if (glFrameBufferWidth != renderer->window->w) return SDL_ERROR;
-  if (glFrameBufferHeight != renderer->window->h) return SDL_ERROR;
+  unsigned int *dest = glFrameBuffer;
+  int destWidth = glFrameBufferWidth;
+  int destHeight = glFrameBufferHeight;
+  int destPitch = destWidth*4;
+  if (renderer->renderTarget!=NULL) {
+    dest = renderer->renderTarget->pixels;
+    destWidth = renderer->renderTarget->w;
+    destHeight = renderer->renderTarget->h;
+    destPitch = renderer->renderTarget->pitch;
+  }
+  if (dest == NULL) return SDL_ERROR;
   int sx0 = 0;
   int sy0 = 0;
   int sx1 = sx0+texture->w;
   int sy1 = sy0+texture->h;
   int dx0 = 0;
   int dy0 = 0;
-  int dx1 = renderer->window->w;
-  int dy1 = renderer->window->h;
+  int dx1 = destWidth;
+  int dy1 = destHeight;
   if (srcrect != NULL) {
     sx0 = srcrect->x;
     sy0 = srcrect->y;
@@ -956,8 +1240,8 @@ SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const 
   bool sameSize=((sx1-sx0)==(dx1-dx0))&&((sy1-sy0)==(dy1-dy0));
   int minx = 0;
   int miny = 0;
-  int maxx = renderer->window->w;
-  int maxy = renderer->window->h;
+  int maxx = destWidth;
+  int maxy = destHeight;
   if (dx0>=maxx) return SDL_ERROR;
   if (dx1<=minx) return SDL_ERROR;
   if (dy0>=maxy) return SDL_ERROR;
@@ -982,10 +1266,11 @@ SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const 
     for (int y = dy0; y < dy1; y++) {
       const int sy = y - dy0 + sy0;
       if (sy >= 0 && sy < texture->h) {
+        Uint32 *d = (Uint32*)((int)dest + y*destPitch);
         for (int x = dx0; x < dx1; x++) {
           const int sx = x - dx0 + sx0;
           if (sx >= 0 && sx < texture->w) {
-            glFrameBuffer[x+y*glFrameBufferWidth] = texture->pixels[sx+sy*texture->w];
+            d[x] = texture->pixels[sx+sy*texture->w]; // todo: texturepitch
           }
         }
       }
@@ -1016,10 +1301,11 @@ SDL_Result SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const 
     for (int y = dy0; y < dy1; y++) {
       const int sy = (int)((y - dy0)*ay + sfy0);
       if (sy >= 0 && sy < texture->h) {
+        Uint32 *d = (Uint32*)((int)dest + y*destPitch);
         for (int x = dx0; x < dx1; x++) {
           const int sx = (int)((x - dx0)*ax + sx0);
           if (sx >= 0 && sx < texture->w) {
-            glFrameBuffer[x+y*glFrameBufferWidth] = texture->pixels[sx+sy*texture->w];
+            d[x] = texture->pixels[sx+sy*texture->w]; // todo: texturepitch
           }
         }
       }
