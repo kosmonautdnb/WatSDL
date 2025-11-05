@@ -22,6 +22,9 @@ And we got YapeSDL up and running. The famous C64/Plus4 emulator now on FreeDOS.
 YapeSDL by Attila Grosz can be found here:  
 https://github.com/calmopyrin/yapesdl.git
 
+Raptor is also included (the SDL Reverse Engineered Port by skynettx not the original DOS Raptor in his repositories.)
+https://github.com/skynettx/raptor
+
 **You need PMODEW(in the zip) instead of Dos4gw in order to get the keyboard and timers working**
 
 This repository lives at:  
