@@ -21,9 +21,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdarg.h>
-#ifndef SDL_DONTINCLUDEGL
-#include "gl.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,16 +59,26 @@ typedef signed int Sint64; // 32 bit, 64 bit support is lacking in WatcomC++ 11
 #define UINT64_MIN (0x0000000000000000)
 #define SIZE_MAX UINT32_MAX
 
-#define floorf(__x__) (float)floor(__x__)
-#define roundf(__x__) (float)round(__x__)
-#define cosf(__x__) (float)cos(__x__)
-#define sinf(__x__) (float)sin(__x__)
-#define sqrtf(__x__) (float)sqrt(__x__)
-#define fabsf(__x__) (float)fabs(__x__)
-#define atanf(__x__) (float)atan(__x__)
-#define atan2f(__x__,__y__) (float)atan2(__x__,__y__)
-#define powf(__x__,__y__) (float)pow(__x__,__y__)
-#define expf(__x__) (float)exp(__x__)
+#undef floorf
+#undef roundf
+#undef cosf
+#undef sinf
+#undef sqrtf
+#undef fabsf
+#undef atanf
+#undef atan2f
+#undef powf
+#undef expf
+#define floorf(__x__) (float)floor((double)(__x__))
+#define roundf(__x__) (float)round((double)(__x__))
+#define cosf(__x__) (float)cos((double)(__x__))
+#define sinf(__x__) (float)sin((double)(__x__))
+#define sqrtf(__x__) (float)sqrt((double)(__x__))
+#define fabsf(__x__) (float)fabs((double)(__x__))
+#define atanf(__x__) (float)atan((double)(__x__))
+#define atan2f(__x__,__y__) (float)atan2((double)(__x__),(double)(__y__))
+#define powf(__x__,__y__) (float)pow((double)(__x__),(double)(__y__))
+#define expf(__x__) (float)exp((double)(__x__))
 
 #define snprintf_x4(__a__,__b__,__c__,__d__) (sprintf(__a__,__c__,__d__) + (((char*)__a__)[(__b__)-1]=0))
 #define snprintf_x5(__a__,__b__,__c__,__d__,__e__) (sprintf(__a__,__c__,__d__,__e__) + (((char*)__a__)[(__b__)-1]=0))
