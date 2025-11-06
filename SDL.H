@@ -105,6 +105,7 @@ typedef int SDL_Result; // :mad: additional
 #define SDL_FORCE_INLINE inline
 #define SDL_FLT_EPSILON 0.00001
 #define SDLCALL 
+#define SDL_assert(__x__) // :mad: todo
 
 typedef struct SDL_GUID {
     Uint8 data[16];
@@ -1252,6 +1253,15 @@ struct SDL_Texture
 };
 typedef struct SDL_Texture SDL_Texture;
 
+typedef Sint64 SDL_FingerID;
+typedef struct SDL_Finger
+{
+    SDL_FingerID id;
+    float x;
+    float y;
+    float pressure;
+} SDL_Finger;
+
 typedef Sint32 SDL_JoystickID;
 typedef SDL_GUID SDL_JoystickGUID;
 
@@ -2006,10 +2016,12 @@ const char *SDL_GetScancodeName(SDL_Scancode scancode);
 Uint8 *SDL_GetKeyboardState(int *numkeys);
 void SDL_ResetKeyboard();
 const char *SDL_GetKeyName(SDL_Keycode key);
+SDL_Keycode SDL_GetKeyFromName(const char *name);
 SDL_Keymod SDL_GetModState();
 SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode);
 
 int SDL_GetNumTouchFingers(SDL_TouchID touchID);
+SDL_Finger *SDL_GetTouchFinger(SDL_TouchID touchID, int index);
 
 int SDL_JoystickEventState(int state);
 int SDL_JoystickGetAxis(SDL_Joystick *joystick, int axis);
@@ -2121,6 +2133,9 @@ void SDL_StartTextInput();
 void SDL_StopTextInput();
 
 SDL_RWops *SDL_RWFromMem(void *mem, int size);
+SDL_RWops *SDL_RWFromConstMem(const void *mem, int size);
+Sint64 SDL_RWseek(SDL_RWops *context, Sint64 offset, int whence);
+SDL_Result SDL_RWclose(SDL_RWops *context);
 
 Uint16 SDL_Swap16(Uint16 a);
 Uint16 SDL_SwapLE16(Uint16 a);

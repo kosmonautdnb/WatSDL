@@ -55,8 +55,8 @@ static void uninstallTimerIrq() {
   if (oldTimerIrqHandler != NULL) {
     union REGS r;
     outp(0x43,0x36);
-    outp(0x40,0); // both 0 = 65536 = 1193180.0/65536.0 = ~18.2 hz
-    outp(0x40,0);
+    outp(0x40,0x00);
+    outp(0x40,0x00);
     r.x.eax = 0x205;
     r.h.bl = 0x08;
     r.x.ecx = FP_SEG(oldTimerIrqHandler);
@@ -147,6 +147,10 @@ void installKeyboardHandler() {
 #define _RALLOC(__type__,__size__) (__type__*)malloc(sizeof(__type__)*(__size__));
 
 unsigned int sdl_initialized = 0;
+
+SDL_Finger *SDL_GetTouchFinger(SDL_TouchID touchID, int index) {
+  return NULL;
+}
 
 SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable) {
   return SDL_OK;
@@ -711,6 +715,13 @@ const char *SDL_GetScancodeName(SDL_Scancode scancode) {
     CONVSCM
   }
   return "UNKNOWN";
+}
+
+SDL_Keycode SDL_GetKeyFromName(const char *name) {
+#undef CONVSC2
+#define CONVSC2(__keycode__,__scancode__,__doscode__,__name__) if (strcmp(name,__name__)==0) return __keycode__;
+    CONVSCM
+  return SDLK_UNKNOWN;
 }
 
 SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {
@@ -1521,6 +1532,18 @@ SDL_Result SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect, 
 
 SDL_RWops *SDL_RWFromMem(void *mem, int size) {
   return NULL;
+}
+
+SDL_RWops *SDL_RWFromConstMem(const void *mem, int size) {
+  return NULL;
+}
+
+Sint64 SDL_RWseek(SDL_RWops *context, Sint64 offset, int whence) {
+  return 0;
+}
+
+SDL_Result SDL_RWclose(SDL_RWops *context) {
+  return SDL_ERROR;
 }
 
 SDL_Surface *SDL_LoadBMP_RW(SDL_RWops * src, int freesrc) {
