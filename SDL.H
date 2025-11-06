@@ -21,6 +21,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdarg.h>
+#ifndef SDL_DONTINCLUDEGL
+#include "gl.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

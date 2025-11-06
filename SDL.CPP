@@ -21,117 +21,7 @@
 extern "C" {
 #endif // __cplusplus
 
-// PMODEW is needed for the Irqs to work (not Dos4gw)
-
-SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable) {
-  return SDL_OK;
-}
-
-bool SDL_IsGameController(int joystick_index) {
-  return false;
-}
-
-SDL_Haptic *SDL_HapticOpen(int device_index) {
-  return NULL;
-}
-
-void SDL_HapticClose(SDL_Haptic *haptic) {
-}
-
-SDL_Result SDL_HapticRumbleInit(SDL_Haptic *haptic) {
-  return SDL_ERROR;
-}
-
-bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller) {
-  return false;
-}
-
-SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index) {
-  return SDL_CONTROLLER_TYPE_UNKNOWN;
-}
-
-SDL_Result SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms) {
-  return SDL_ERROR;
-}
-
-int SDL_GetNumTouchFingers(SDL_TouchID touchID) {
-  return 0;
-}
-
-SDL_Result SDL_LockSurface(SDL_Surface *surface) {
-  return SDL_OK;
-}
-
-void SDL_UnlockSurface(SDL_Surface *surface) {
-}
-
-void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h) {
-  if (w != NULL) *w = window->w; 
-  if (h != NULL) *h = window->h;
-}
-
-bool SDL_IsTextInputActive() {
-  return false;
-}
-
-void SDL_StartTextInput() {
-}
-
-void SDL_StopTextInput() {
-}
-
-void SDL_RenderGetScale(SDL_Renderer *renderer, float *scaleX, float *scaleY) {
-  if (scaleX != NULL) *scaleX = renderer->scale.x; 
-  if (scaleY != NULL) *scaleY = renderer->scale.y;
-}
-
-void SDL_SetWindowTitle(SDL_Window *window, const char *title) {
-  window->title = title;
-}
-
-void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h) {
-  window->min_w = min_w; window->min_h = min_h;
-}
-
-Uint32 SDL_GetWindowPixelFormat(SDL_Window *window) {
-  return window->pixelFormat;
-}
-
-SDL_Rect DRectToRect(SDL_DRect *d) {
-  SDL_Rect r; 
-  r.x = (int)d->x; 
-  r.y = (int)d->y; 
-  r.w = (int)d->w; 
-  r.h = (int)d->h; 
-  return r;
-}
-
-SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect) {
-  if (rect != NULL) *rect = DRectToRect(&renderer->viewport); 
-  return SDL_OK;
-}
-
-SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors) {
-  for(int i = 0; i < ncolors; i++) palette->colors[i+firstcolor]=colors[i];
-  return SDL_OK;
-}
-
-SDL_Result SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
-  return SDL_ERROR;
-}
-
-void SDL_CloseAudio() {
-}
-
-void SDL_PauseAudio(int pause_on) {
-}
-
-void SDL_PumpEvents() {
-}
-
-Uint32 SDL_GetWindowID(SDL_Window *window) {
-  return window->windowID;
-}
+// PMODEW is needed for the Irqs to work (Keyboard, GetTicks()) (not in Dos4gw)
 
 void SDL_SetBiosCursor(int x, int y) {
     union REGS regs;
@@ -258,6 +148,116 @@ void installKeyboardHandler() {
 
 unsigned int sdl_initialized = 0;
 
+SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable) {
+  return SDL_OK;
+}
+
+bool SDL_IsGameController(int joystick_index) {
+  return false;
+}
+
+SDL_Haptic *SDL_HapticOpen(int device_index) {
+  return NULL;
+}
+
+void SDL_HapticClose(SDL_Haptic *haptic) {
+}
+
+SDL_Result SDL_HapticRumbleInit(SDL_Haptic *haptic) {
+  return SDL_ERROR;
+}
+
+bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller) {
+  return false;
+}
+
+SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index) {
+  return SDL_CONTROLLER_TYPE_UNKNOWN;
+}
+
+SDL_Result SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms) {
+  return SDL_ERROR;
+}
+
+int SDL_GetNumTouchFingers(SDL_TouchID touchID) {
+  return 0;
+}
+
+SDL_Result SDL_LockSurface(SDL_Surface *surface) {
+  return SDL_OK;
+}
+
+void SDL_UnlockSurface(SDL_Surface *surface) {
+}
+
+void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h) {
+  if (w != NULL) *w = window->w; 
+  if (h != NULL) *h = window->h;
+}
+
+bool SDL_IsTextInputActive() {
+  return false;
+}
+
+void SDL_StartTextInput() {
+}
+
+void SDL_StopTextInput() {
+}
+
+void SDL_RenderGetScale(SDL_Renderer *renderer, float *scaleX, float *scaleY) {
+  if (scaleX != NULL) *scaleX = renderer->scale.x; 
+  if (scaleY != NULL) *scaleY = renderer->scale.y;
+}
+
+void SDL_SetWindowTitle(SDL_Window *window, const char *title) {
+  window->title = title;
+}
+
+void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h) {
+  window->min_w = min_w; window->min_h = min_h;
+}
+
+Uint32 SDL_GetWindowPixelFormat(SDL_Window *window) {
+  return window->pixelFormat;
+}
+
+SDL_Rect DRectToRect(SDL_DRect *d) {
+  SDL_Rect r; 
+  r.x = (int)d->x; 
+  r.y = (int)d->y; 
+  r.w = (int)d->w; 
+  r.h = (int)d->h; 
+  return r;
+}
+
+SDL_Result SDL_RenderGetViewport(SDL_Renderer *renderer, SDL_Rect *rect) {
+  if (rect != NULL) *rect = DRectToRect(&renderer->viewport); 
+  return SDL_OK;
+}
+
+SDL_Result SDL_SetPaletteColors(SDL_Palette *palette, const SDL_Color *colors, int firstcolor, int ncolors) {
+  for(int i = 0; i < ncolors; i++) palette->colors[i+firstcolor]=colors[i];
+  return SDL_OK;
+}
+
+SDL_Result SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
+  return SDL_ERROR;
+}
+
+void SDL_CloseAudio() {
+}
+
+void SDL_PauseAudio(int pause_on) {
+}
+
+void SDL_PumpEvents() {
+}
+
+Uint32 SDL_GetWindowID(SDL_Window *window) {
+  return window->windowID;
+}
+
 SDL_MessageBoxButtonData _SDL_MessageBoxButtonData(int flags, int buttonid, const char *text) {
   SDL_MessageBoxButtonData r; r.flags = flags; r.buttonid = buttonid; r.text = text; return r;
 }
@@ -364,14 +364,6 @@ void SDL_FillRect(SDL_Surface *dst, const SDL_Rect *rect, Uint32 color) {
   }
 }
 
-SDL_Scancode SDL_GetScancodeFromName(const char *name) {
-  return SDL_SCANCODE_UNKNOWN;
-}
-
-const char *SDL_GetScancodeName(SDL_Scancode scancode) {
-  return "none";
-}
-
 void SDL_Delay(double ms) {
   double b = SDL_GetTicks();
   while(fabs((double)SDL_GetTicks()-b)<ms) {;}
@@ -466,13 +458,6 @@ Uint8 *SDL_GetKeyboardState(int *numKeys) {
 void SDL_ResetKeyboard() {
   memset(scanCode_last,0,sizeof(scanCode_last));
   memset((void*)keyPressed,0,sizeof(keyPressed));
-}
-
-const char *SDL_GetKeyName(SDL_Keycode key) {
-  static char buffer[2];
-  buffer[1] = 0;
-  buffer[0] = (Uint8)((int)key & 255);
-  return buffer;
 }
 
 #define SCANCODE_ESCAPE 1
@@ -584,87 +569,87 @@ const char *SDL_GetKeyName(SDL_Keycode key) {
 #define SCANCODEALT 0x200
 
 #define CONVSCM\
-  CONVSC2(SDLK_UNKNOWN,SDL_SCANCODE_UNKNOWN,0)\
-  CONVSC2(SDLK_RETURN,SDL_SCANCODE_RETURN,SCANCODE_ENTER)\
-  CONVSC2(SDLK_ESCAPE,SDL_SCANCODE_ESCAPE,SCANCODE_ESCAPE)\
-  CONVSC2(SDLK_BACKSPACE,SDL_SCANCODE_BACKSPACE,SCANCODE_BACKSPACE)\
-  CONVSC2(SDLK_TAB,SDL_SCANCODE_TAB,SCANCODE_TAB)\
-  CONVSC2(SDLK_SPACE,SDL_SCANCODE_SPACE,SCANCODE_SPACE)\
-  CONVSC2(SDLK_PLUS,SDL_SCANCODE_KP_PLUS,SCANCODE_PLUS)\
-  CONVSC2(SDLK_COMMA,SDL_SCANCODE_COMMA,SCANCODE_COMMA)\
-  CONVSC2(SDLK_MINUS,SDL_SCANCODE_MINUS,SCANCODE_MINUS)\
-  CONVSC2(SDLK_0,SDL_SCANCODE_0,SCANCODE_0)\
-  CONVSC2(SDLK_1,SDL_SCANCODE_1,SCANCODE_1)\
-  CONVSC2(SDLK_2,SDL_SCANCODE_2,SCANCODE_2)\
-  CONVSC2(SDLK_3,SDL_SCANCODE_3,SCANCODE_3)\
-  CONVSC2(SDLK_4,SDL_SCANCODE_4,SCANCODE_4)\
-  CONVSC2(SDLK_5,SDL_SCANCODE_5,SCANCODE_5)\
-  CONVSC2(SDLK_6,SDL_SCANCODE_6,SCANCODE_6)\
-  CONVSC2(SDLK_7,SDL_SCANCODE_7,SCANCODE_7)\
-  CONVSC2(SDLK_8,SDL_SCANCODE_8,SCANCODE_8)\
-  CONVSC2(SDLK_9,SDL_SCANCODE_9,SCANCODE_9)\
-  CONVSC2(SDLK_SEMICOLON,SDL_SCANCODE_SEMICOLON,SCANCODE_COMMA|SCANCODESHIFT)\
-  CONVSC2(SDLK_EQUALS,SDL_SCANCODE_EQUALS,SCANCODE_0|SCANCODESHIFT)\
-  CONVSC2(SDLK_LEFTBRACKET,SDL_SCANCODE_LEFTBRACKET,SCANCODE_8|SCANCODEALT)\
-  CONVSC2(SDLK_BACKSLASH,SDL_SCANCODE_BACKSLASH,SCANCODE_7|SCANCODESHIFT)\
-  CONVSC2(SDLK_RIGHTBRACKET,SDL_SCANCODE_RIGHTBRACKET,SCANCODE_9|SCANCODEALT)\
-  CONVSC2(SDLK_a,SDL_SCANCODE_A,SCANCODE_A)\
-  CONVSC2(SDLK_b,SDL_SCANCODE_B,SCANCODE_B)\
-  CONVSC2(SDLK_c,SDL_SCANCODE_C,SCANCODE_C)\
-  CONVSC2(SDLK_d,SDL_SCANCODE_D,SCANCODE_D)\
-  CONVSC2(SDLK_e,SDL_SCANCODE_E,SCANCODE_E)\
-  CONVSC2(SDLK_f,SDL_SCANCODE_F,SCANCODE_F)\
-  CONVSC2(SDLK_g,SDL_SCANCODE_G,SCANCODE_G)\
-  CONVSC2(SDLK_h,SDL_SCANCODE_H,SCANCODE_H)\
-  CONVSC2(SDLK_i,SDL_SCANCODE_I,SCANCODE_I)\
-  CONVSC2(SDLK_j,SDL_SCANCODE_J,SCANCODE_J)\
-  CONVSC2(SDLK_k,SDL_SCANCODE_K,SCANCODE_K)\
-  CONVSC2(SDLK_l,SDL_SCANCODE_L,SCANCODE_L)\
-  CONVSC2(SDLK_m,SDL_SCANCODE_M,SCANCODE_M)\
-  CONVSC2(SDLK_n,SDL_SCANCODE_N,SCANCODE_N)\
-  CONVSC2(SDLK_o,SDL_SCANCODE_O,SCANCODE_O)\
-  CONVSC2(SDLK_p,SDL_SCANCODE_P,SCANCODE_P)\
-  CONVSC2(SDLK_q,SDL_SCANCODE_Q,SCANCODE_Q)\
-  CONVSC2(SDLK_r,SDL_SCANCODE_R,SCANCODE_R)\
-  CONVSC2(SDLK_s,SDL_SCANCODE_S,SCANCODE_S)\
-  CONVSC2(SDLK_t,SDL_SCANCODE_T,SCANCODE_T)\
-  CONVSC2(SDLK_u,SDL_SCANCODE_U,SCANCODE_U)\
-  CONVSC2(SDLK_v,SDL_SCANCODE_V,SCANCODE_V)\
-  CONVSC2(SDLK_w,SDL_SCANCODE_W,SCANCODE_W)\
-  CONVSC2(SDLK_x,SDL_SCANCODE_X,SCANCODE_X)\
-  CONVSC2(SDLK_y,SDL_SCANCODE_Y,SCANCODE_Y)\
-  CONVSC2(SDLK_z,SDL_SCANCODE_Z,SCANCODE_Z)\
-  CONVSC2(SDLK_CAPSLOCK,SDL_SCANCODE_CAPSLOCK,SCANCODE_SHIFTLOCK)\
-  CONVSC2(SDLK_F1,SDL_SCANCODE_F1,SCANCODE_F1)\
-  CONVSC2(SDLK_F2,SDL_SCANCODE_F2,SCANCODE_F2)\
-  CONVSC2(SDLK_F3,SDL_SCANCODE_F3,SCANCODE_F3)\
-  CONVSC2(SDLK_F4,SDL_SCANCODE_F4,SCANCODE_F4)\
-  CONVSC2(SDLK_F5,SDL_SCANCODE_F5,SCANCODE_F5)\
-  CONVSC2(SDLK_F6,SDL_SCANCODE_F6,SCANCODE_F6)\
-  CONVSC2(SDLK_F7,SDL_SCANCODE_F7,SCANCODE_F7)\
-  CONVSC2(SDLK_F8,SDL_SCANCODE_F8,SCANCODE_F8)\
-  CONVSC2(SDLK_F9,SDL_SCANCODE_F9,SCANCODE_F9)\
-  CONVSC2(SDLK_F10,SDL_SCANCODE_F10,SCANCODE_F10)\
-  CONVSC2(SDLK_F11,SDL_SCANCODE_F11,SCANCODE_F11)\
-  CONVSC2(SDLK_F12,SDL_SCANCODE_F12,SCANCODE_F12)\
-  CONVSC2(SDLK_PRINTSCREEN,SDL_SCANCODE_PRINTSCREEN,SCANCODE_PRINT)\
-  CONVSC2(SDLK_INSERT,SDL_SCANCODE_INSERT,SCANCODE_INSERT)\
-  CONVSC2(SDLK_HOME,SDL_SCANCODE_HOME,SCANCODE_START)\
-  CONVSC2(SDLK_PAGEUP,SDL_SCANCODE_PAGEUP,SCANCODE_PAGEUP)\
-  CONVSC2(SDLK_DELETE,SDL_SCANCODE_DELETE,SCANCODE_DELETE)\
-  CONVSC2(SDLK_END,SDL_SCANCODE_END,SCANCODE_END)\
-  CONVSC2(SDLK_PAGEDOWN,SDL_SCANCODE_PAGEDOWN,SCANCODE_PAGEDOWN)\
-  CONVSC2(SDLK_RIGHT,SDL_SCANCODE_RIGHT,SCANCODE_RIGHT)\
-  CONVSC2(SDLK_LEFT,SDL_SCANCODE_LEFT,SCANCODE_LEFT)\
-  CONVSC2(SDLK_DOWN,SDL_SCANCODE_DOWN,SCANCODE_DOWN)\
-  CONVSC2(SDLK_UP,SDL_SCANCODE_UP,SCANCODE_UP)\
-  CONVSC2(SDLK_NUMLOCKCLEAR,SDL_SCANCODE_NUMLOCKCLEAR,SCANCODE_NUMNUM)\
-  CONVSC2(SDLK_KP_MINUS,SDL_SCANCODE_KP_MINUS,SCANCODE_NUMMINUS)\
-  CONVSC2(SDLK_LCTRL,SDL_SCANCODE_LCTRL,SCANCODE_CTRL)\
-  CONVSC2(SDLK_LSHIFT,SDL_SCANCODE_LSHIFT,SCANCODE_LSHIFT)\
-  CONVSC2(SDLK_LALT,SDL_SCANCODE_LALT,SCANCODE_ALT)\
-  CONVSC2(SDLK_RSHIFT,SDL_SCANCODE_RSHIFT,SCANCODE_RSHIFT)\
-  CONVSC2(SDLK_KP_5,SDL_SCANCODE_KP_5,SCANCODE_NUM5)
+  CONVSC2(SDLK_UNKNOWN,SDL_SCANCODE_UNKNOWN,0,"UNKNOWN")\
+  CONVSC2(SDLK_RETURN,SDL_SCANCODE_RETURN,SCANCODE_ENTER,"RETURN")\
+  CONVSC2(SDLK_ESCAPE,SDL_SCANCODE_ESCAPE,SCANCODE_ESCAPE,"ESCAPE")\
+  CONVSC2(SDLK_BACKSPACE,SDL_SCANCODE_BACKSPACE,SCANCODE_BACKSPACE,"BACKSPACE")\
+  CONVSC2(SDLK_TAB,SDL_SCANCODE_TAB,SCANCODE_TAB,"TAB")\
+  CONVSC2(SDLK_SPACE,SDL_SCANCODE_SPACE,SCANCODE_SPACE,"SPACE")\
+  CONVSC2(SDLK_PLUS,SDL_SCANCODE_KP_PLUS,SCANCODE_PLUS,"PLUS")\
+  CONVSC2(SDLK_COMMA,SDL_SCANCODE_COMMA,SCANCODE_COMMA,"COMMA")\
+  CONVSC2(SDLK_MINUS,SDL_SCANCODE_MINUS,SCANCODE_MINUS,"MINUS")\
+  CONVSC2(SDLK_0,SDL_SCANCODE_0,SCANCODE_0,"0")\
+  CONVSC2(SDLK_1,SDL_SCANCODE_1,SCANCODE_1,"1")\
+  CONVSC2(SDLK_2,SDL_SCANCODE_2,SCANCODE_2,"2")\
+  CONVSC2(SDLK_3,SDL_SCANCODE_3,SCANCODE_3,"3")\
+  CONVSC2(SDLK_4,SDL_SCANCODE_4,SCANCODE_4,"4")\
+  CONVSC2(SDLK_5,SDL_SCANCODE_5,SCANCODE_5,"5")\
+  CONVSC2(SDLK_6,SDL_SCANCODE_6,SCANCODE_6,"6")\
+  CONVSC2(SDLK_7,SDL_SCANCODE_7,SCANCODE_7,"7")\
+  CONVSC2(SDLK_8,SDL_SCANCODE_8,SCANCODE_8,"8")\
+  CONVSC2(SDLK_9,SDL_SCANCODE_9,SCANCODE_9,"9")\
+  CONVSC2(SDLK_SEMICOLON,SDL_SCANCODE_SEMICOLON,SCANCODE_COMMA|SCANCODESHIFT,"SEMICOLON")\
+  CONVSC2(SDLK_EQUALS,SDL_SCANCODE_EQUALS,SCANCODE_0|SCANCODESHIFT,"EQUALS")\
+  CONVSC2(SDLK_LEFTBRACKET,SDL_SCANCODE_LEFTBRACKET,SCANCODE_8|SCANCODEALT,"LEFTBRACKET")\
+  CONVSC2(SDLK_BACKSLASH,SDL_SCANCODE_BACKSLASH,SCANCODE_7|SCANCODESHIFT,"BACKSLASH")\
+  CONVSC2(SDLK_RIGHTBRACKET,SDL_SCANCODE_RIGHTBRACKET,SCANCODE_9|SCANCODEALT,"RIGHTBRACKED")\
+  CONVSC2(SDLK_a,SDL_SCANCODE_A,SCANCODE_A,"a")\
+  CONVSC2(SDLK_b,SDL_SCANCODE_B,SCANCODE_B,"b")\
+  CONVSC2(SDLK_c,SDL_SCANCODE_C,SCANCODE_C,"c")\
+  CONVSC2(SDLK_d,SDL_SCANCODE_D,SCANCODE_D,"d")\
+  CONVSC2(SDLK_e,SDL_SCANCODE_E,SCANCODE_E,"e")\
+  CONVSC2(SDLK_f,SDL_SCANCODE_F,SCANCODE_F,"f")\
+  CONVSC2(SDLK_g,SDL_SCANCODE_G,SCANCODE_G,"g")\
+  CONVSC2(SDLK_h,SDL_SCANCODE_H,SCANCODE_H,"h")\
+  CONVSC2(SDLK_i,SDL_SCANCODE_I,SCANCODE_I,"i")\
+  CONVSC2(SDLK_j,SDL_SCANCODE_J,SCANCODE_J,"j")\
+  CONVSC2(SDLK_k,SDL_SCANCODE_K,SCANCODE_K,"k")\
+  CONVSC2(SDLK_l,SDL_SCANCODE_L,SCANCODE_L,"l")\
+  CONVSC2(SDLK_m,SDL_SCANCODE_M,SCANCODE_M,"m")\
+  CONVSC2(SDLK_n,SDL_SCANCODE_N,SCANCODE_N,"n")\
+  CONVSC2(SDLK_o,SDL_SCANCODE_O,SCANCODE_O,"o")\
+  CONVSC2(SDLK_p,SDL_SCANCODE_P,SCANCODE_P,"p")\
+  CONVSC2(SDLK_q,SDL_SCANCODE_Q,SCANCODE_Q,"q")\
+  CONVSC2(SDLK_r,SDL_SCANCODE_R,SCANCODE_R,"r")\
+  CONVSC2(SDLK_s,SDL_SCANCODE_S,SCANCODE_S,"s")\
+  CONVSC2(SDLK_t,SDL_SCANCODE_T,SCANCODE_T,"t")\
+  CONVSC2(SDLK_u,SDL_SCANCODE_U,SCANCODE_U,"u")\
+  CONVSC2(SDLK_v,SDL_SCANCODE_V,SCANCODE_V,"v")\
+  CONVSC2(SDLK_w,SDL_SCANCODE_W,SCANCODE_W,"w")\
+  CONVSC2(SDLK_x,SDL_SCANCODE_X,SCANCODE_X,"x")\
+  CONVSC2(SDLK_y,SDL_SCANCODE_Y,SCANCODE_Y,"y")\
+  CONVSC2(SDLK_z,SDL_SCANCODE_Z,SCANCODE_Z,"z")\
+  CONVSC2(SDLK_CAPSLOCK,SDL_SCANCODE_CAPSLOCK,SCANCODE_SHIFTLOCK,"CAPSLOCK")\
+  CONVSC2(SDLK_F1,SDL_SCANCODE_F1,SCANCODE_F1,"F1")\
+  CONVSC2(SDLK_F2,SDL_SCANCODE_F2,SCANCODE_F2,"F2")\
+  CONVSC2(SDLK_F3,SDL_SCANCODE_F3,SCANCODE_F3,"F3")\
+  CONVSC2(SDLK_F4,SDL_SCANCODE_F4,SCANCODE_F4,"F4")\
+  CONVSC2(SDLK_F5,SDL_SCANCODE_F5,SCANCODE_F5,"F5")\
+  CONVSC2(SDLK_F6,SDL_SCANCODE_F6,SCANCODE_F6,"F6")\
+  CONVSC2(SDLK_F7,SDL_SCANCODE_F7,SCANCODE_F7,"F7")\
+  CONVSC2(SDLK_F8,SDL_SCANCODE_F8,SCANCODE_F8,"F8")\
+  CONVSC2(SDLK_F9,SDL_SCANCODE_F9,SCANCODE_F9,"F9")\
+  CONVSC2(SDLK_F10,SDL_SCANCODE_F10,SCANCODE_F10,"F10")\
+  CONVSC2(SDLK_F11,SDL_SCANCODE_F11,SCANCODE_F11,"F11")\
+  CONVSC2(SDLK_F12,SDL_SCANCODE_F12,SCANCODE_F12,"F12")\
+  CONVSC2(SDLK_PRINTSCREEN,SDL_SCANCODE_PRINTSCREEN,SCANCODE_PRINT,"PRINTSCREEN")\
+  CONVSC2(SDLK_INSERT,SDL_SCANCODE_INSERT,SCANCODE_INSERT,"INSERT")\
+  CONVSC2(SDLK_HOME,SDL_SCANCODE_HOME,SCANCODE_START,"HOME")\
+  CONVSC2(SDLK_PAGEUP,SDL_SCANCODE_PAGEUP,SCANCODE_PAGEUP,"PAGEUP")\
+  CONVSC2(SDLK_DELETE,SDL_SCANCODE_DELETE,SCANCODE_DELETE,"DELETE")\
+  CONVSC2(SDLK_END,SDL_SCANCODE_END,SCANCODE_END,"END")\
+  CONVSC2(SDLK_PAGEDOWN,SDL_SCANCODE_PAGEDOWN,SCANCODE_PAGEDOWN,"PAGEDOWN")\
+  CONVSC2(SDLK_RIGHT,SDL_SCANCODE_RIGHT,SCANCODE_RIGHT,"RIGHT")\
+  CONVSC2(SDLK_LEFT,SDL_SCANCODE_LEFT,SCANCODE_LEFT,"LEFT")\
+  CONVSC2(SDLK_DOWN,SDL_SCANCODE_DOWN,SCANCODE_DOWN,"DOWN")\
+  CONVSC2(SDLK_UP,SDL_SCANCODE_UP,SCANCODE_UP,"UP")\
+  CONVSC2(SDLK_NUMLOCKCLEAR,SDL_SCANCODE_NUMLOCKCLEAR,SCANCODE_NUMNUM,"NUMLOCKCLEAR")\
+  CONVSC2(SDLK_KP_MINUS,SDL_SCANCODE_KP_MINUS,SCANCODE_NUMMINUS,"KEYPAD MINUS")\
+  CONVSC2(SDLK_LCTRL,SDL_SCANCODE_LCTRL,SCANCODE_CTRL,"LEFT CTRL")\
+  CONVSC2(SDLK_LSHIFT,SDL_SCANCODE_LSHIFT,SCANCODE_LSHIFT,"LEFT SHIFT")\
+  CONVSC2(SDLK_LALT,SDL_SCANCODE_LALT,SCANCODE_ALT,"ALT")\
+  CONVSC2(SDLK_RSHIFT,SDL_SCANCODE_RSHIFT,SCANCODE_RSHIFT,"RIGHT SHIFT")\
+  CONVSC2(SDLK_KP_5,SDL_SCANCODE_KP_5,SCANCODE_NUM5,"KEYPAD 5")
 /*
   CONVSC2(SDLK_EXCLAIM,SDL_SCANCODE_EXCLAIM,-1)\
   CONVSC2(SDLK_QUOTEDBL,SDL_SCANCODE_QUOTEDBL,-1)\
@@ -704,10 +689,34 @@ const char *SDL_GetKeyName(SDL_Keycode key) {
   CONVSC2(SDLK_PERIOD,SDL_SCANCODE_PERIOD,-1)\
   CONVSC2(SDLK_SLASH,SDL_SCANCODE_SLASH,-1)
 */
+const char *SDL_GetKeyName(SDL_Keycode key) {
+  switch((int)key) {
+#define CONVSC2(__keycode__,__scancode__,__doscode__,__name__) case ((int)(__keycode__)): {return __name__;}
+    CONVSCM
+  }
+  return "UNKNOWN";
+}
+
+SDL_Scancode SDL_GetScancodeFromName(const char *name) {
+#undef CONVSC2
+#define CONVSC2(__keycode__,__scancode__,__doscode__,__name__) if (strcmp(name,__name__)==0) return __scancode__;
+    CONVSCM
+  return SDL_SCANCODE_UNKNOWN;
+}
+
+const char *SDL_GetScancodeName(SDL_Scancode scancode) {
+  switch((int)scancode) {
+#undef CONVSC2
+#define CONVSC2(__keycode__,__scancode__,__doscode__,__name__) case ((int)(__scancode__)): {return __name__;}
+    CONVSCM
+  }
+  return "UNKNOWN";
+}
 
 SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {
   switch((int)scancode) {
-#define CONVSC2(__keycode__,__scancode__,__doscode__) case ((int)(__scancode__)): {return __keycode__;}
+#undef CONVSC2
+#define CONVSC2(__keycode__,__scancode__,__doscode__,__name__) case ((int)(__scancode__)): {return __keycode__;}
     CONVSCM
   }
   return SDLK_UNKNOWN;
@@ -724,7 +733,7 @@ Uint8 isDosKeyPressed(int dosCode) {
 Uint8 pressedScanCode(SDL_Scancode s) {
   switch((int)s) {
 #undef CONVSC2
-#define CONVSC2(__keycode__,__scancode__,__doscode__) case ((int)(__scancode__)): {return isDosKeyPressed(__doscode__);}
+#define CONVSC2(__keycode__,__scancode__,__doscode__,__name__) case ((int)(__scancode__)): {return isDosKeyPressed(__doscode__);}
     CONVSCM
   }
   return 0;
