@@ -736,6 +736,40 @@ typedef enum SDL_WindowFlags
 #define SDL_WINDOWPOS_CENTERED SDL_WINDOWPOS_CENTERED_DISPLAY(0)
 #define SDL_WINDOWPOS_ISCENTERED(X) (((X)&0xFFFF0000)==SDL_WINDOWPOS_CENTERED_MASK)
 
+typedef void *SDL_GLContext;
+
+typedef enum SDL_GLattr
+{
+    SDL_GL_RED_SIZE,
+    SDL_GL_GREEN_SIZE,
+    SDL_GL_BLUE_SIZE,
+    SDL_GL_ALPHA_SIZE,
+    SDL_GL_BUFFER_SIZE,
+    SDL_GL_DOUBLEBUFFER,
+    SDL_GL_DEPTH_SIZE,
+    SDL_GL_STENCIL_SIZE,
+    SDL_GL_ACCUM_RED_SIZE,
+    SDL_GL_ACCUM_GREEN_SIZE,
+    SDL_GL_ACCUM_BLUE_SIZE,
+    SDL_GL_ACCUM_ALPHA_SIZE,
+    SDL_GL_STEREO,
+    SDL_GL_MULTISAMPLEBUFFERS,
+    SDL_GL_MULTISAMPLESAMPLES,
+    SDL_GL_ACCELERATED_VISUAL,
+    SDL_GL_RETAINED_BACKING,
+    SDL_GL_CONTEXT_MAJOR_VERSION,
+    SDL_GL_CONTEXT_MINOR_VERSION,
+    SDL_GL_CONTEXT_EGL,
+    SDL_GL_CONTEXT_FLAGS,
+    SDL_GL_CONTEXT_PROFILE_MASK,
+    SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
+    SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+    SDL_GL_CONTEXT_RELEASE_BEHAVIOR,
+    SDL_GL_CONTEXT_RESET_NOTIFICATION,
+    SDL_GL_CONTEXT_NO_ERROR,
+    SDL_GL_FLOATBUFFERS
+} SDL_GLattr;
+
 #define SDL_BUTTON(X) (1<<((X)-1))
 #define SDL_BUTTON_LEFT 1
 #define SDL_BUTTON_MIDDLE 2
@@ -2039,6 +2073,7 @@ int SDL_JoystickNumHats(SDL_Joystick *joystick);
 SDL_GameController *SDL_GameControllerOpen(int joystick_index);
 bool SDL_IsGameController(int joystick_index);
 SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index);
+SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick *joystick);
 
 int SDL_GameControllerGetButton(SDL_GameController *gamecontroller,SDL_GameControllerButton button);
 int SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,SDL_GameControllerAxis axis);
@@ -2085,6 +2120,7 @@ SDL_Result SDL_RenderSetIntegerScale(SDL_Renderer *renderer, bool enable);
 int SDL_GetNumVideoDisplays();
 SDL_Result SDL_GetDisplayBounds(int displayIndex, SDL_Rect *rect);
 SDL_Result SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode *mode);
+const char *SDL_GetDisplayName(int displayIndex);
 
 SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags);
 void SDL_SetWindowIcon(SDL_Window *window, SDL_Surface *icon);
@@ -2099,10 +2135,19 @@ void SDL_SetWindowSize(SDL_Window *window, int w, int h);
 SDL_Result SDL_SetWindowFullscreen(SDL_Window *window, Uint32 flags);
 Uint32 SDL_GetWindowID(SDL_Window *window);
 void SDL_WarpMouseInWindow(SDL_Window *window, int x, int y);
-void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h);
 void SDL_SetWindowTitle(SDL_Window *window, const char *title);
 Uint32 SDL_GetWindowPixelFormat(SDL_Window *window);
 void SDL_SetWindowMinimumSize(SDL_Window *window, int min_w, int min_h);
+void SDL_SetWindowGrab(SDL_Window *window, bool grabbed);
+
+SDL_GLContext SDL_GL_CreateContext(SDL_Window *window);
+void SDL_GL_SwapWindow(SDL_Window *window);
+void *SDL_GL_GetProcAddress(const char *proc);
+void SDL_GL_DeleteContext(SDL_GLContext context);
+SDL_Result SDL_GL_SetSwapInterval(int interval);
+void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h);
+SDL_Result SDL_GL_SetAttribute(SDL_GLattr attr, int value);
+SDL_Result SDL_GL_GetAttribute(SDL_GLattr attr, int *value);
 
 SDL_Surface *SDL_CreateRGBSurface(Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
 SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int width, int height, int depth, int pitch, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
@@ -2115,6 +2160,7 @@ SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, 
 SDL_Result SDL_LowerBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect);
 SDL_Result SDL_LockSurface(SDL_Surface *surface);
 void SDL_UnlockSurface(SDL_Surface *surface);
+SDL_Surface *SDL_ConvertSurface(SDL_Surface *src, const SDL_PixelFormat *fmt, Uint32 flags);
 
 SDL_Result SDL_SetTextureBlendMode(SDL_Texture *texture, SDL_BlendMode blendMode);
 SDL_Result SDL_SetTextureAlphaMod(SDL_Texture *texture, Uint8 alpha);

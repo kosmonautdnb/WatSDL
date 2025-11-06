@@ -148,6 +148,48 @@ void installKeyboardHandler() {
 
 unsigned int sdl_initialized = 0;
 
+SDL_Result SDL_GL_SetAttribute(SDL_GLattr attr, int value) {
+  return SDL_ERROR;
+}
+
+SDL_Result SDL_GL_GetAttribute(SDL_GLattr attr, int *value) {
+  return SDL_ERROR;
+}
+
+const char *SDL_GetDisplayName(int displayIndex) {
+  return "WatcomGL Display";
+}
+
+SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick *joystick) {
+  return 0;
+}
+
+void *SDL_GL_GetProcAddress(const char *proc) {
+  return NULL;
+}
+
+SDL_GLContext SDL_GL_CreateContext(SDL_Window *window) {
+  return NULL;
+}
+
+void SDL_GL_DeleteContext(SDL_GLContext context) {
+}
+
+void SDL_GL_SwapWindow(SDL_Window *window) {
+  glRefresh();
+}
+
+void SDL_SetWindowGrab(SDL_Window *window, bool grabbed) {
+}
+
+SDL_Result SDL_GL_SetSwapInterval(int interval) {
+  return SDL_OK;
+}
+
+SDL_Surface *SDL_ConvertSurface(SDL_Surface *src, const SDL_PixelFormat *fmt, Uint32 flags) {
+  return NULL;
+}
+
 SDL_Finger *SDL_GetTouchFinger(SDL_TouchID touchID, int index) {
   return NULL;
 }
