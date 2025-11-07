@@ -31,7 +31,7 @@ void SDL_SetBiosCursor(int x, int y) {
     int386(0x10, &r, &r);
 }
 
-#define SDL_DPMIERROR {glDone(); printf("SDLError: No appropiate DPMI service.\n Maybe use PModeW at linking instead of Dos4GW.\n");exit(0);}
+#define SDL_DPMIERROR {glDone(); printf("SDLError: No appropiate DPMI service.\n Maybe use PModeW at linking.\n");exit(0);}
 
 #if defined(SDL_USETIMERIRQ) && (!defined(__DJGPP__))
 static volatile double timerSeconds = 0;
