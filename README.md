@@ -1,8 +1,6 @@
 # WatSDL
 Some functions for emulating the SDL2 on FreeDos / WatcomC++  
 
-**You currently need PMODEW(in the zip) instead of the standard WatcomC Dos4GW in order to get the KEYBOARD and TIMERS working, PMODEW also features 256MB of memory instead of the 32MB of Dos4GW**
-
 SDL (Simple DirectMedia Layer) original repository:  
 https://github.com/libsdl-org/SDL.git  
   
