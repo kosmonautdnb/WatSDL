@@ -28,7 +28,7 @@ extern "C" {
 
 // -------------------------------
 
-#define inline __inline
+#define SDLinline __inline
 #define TARGET_WIN32
 #define NDEBUG
 
@@ -85,7 +85,7 @@ typedef signed int Sint64; // 32 bit, 64 bit support is lacking in WatcomC++ 11
 #define snprintf_x6(__a__,__b__,__c__,__d__,__e__,__f__) (sprintf(__a__,__c__,__d__,__e__,__f__) + (((char*)__a__)[(__b__)-1]=0))
 
 #if defined(__WATCOMC__) && (__WATCOMC__ < 1300)
-static inline double round(const double a) {return floor(a+0.5);}
+static SDLinline double round(const double a) {return floor(a+0.5);}
 #endif
 
 #define SDL_fabsf fabsf
@@ -102,7 +102,7 @@ static inline double round(const double a) {return floor(a+0.5);}
 #define SDL_ERROR -1 // :mad: additional
 #define SDL_bool bool
 typedef int SDL_Result; // :mad: additional
-#define SDL_FORCE_INLINE inline
+#define SDL_FORCE_INLINE SDLinline
 #define SDL_FLT_EPSILON 0.00001
 #define SDLCALL 
 #define SDL_assert(__x__) // :mad: todo
@@ -966,7 +966,7 @@ typedef struct SDL_Color
     Uint8 a;
 } SDL_Color;
 #define SDL_Colour SDL_Color
-static inline SDL_Color SDL_Color_(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 0xff) {SDL_Color r2; r2.r = r; r2.g=g; r2.b=b; r2.a=a; return r2;}
+static SDLinline SDL_Color SDL_Color_(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 0xff) {SDL_Color r2; r2.r = r; r2.g=g; r2.b=b; r2.a=a; return r2;}
 
 typedef struct SDL_Palette
 {
