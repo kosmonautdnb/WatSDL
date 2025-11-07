@@ -21,16 +21,17 @@
 extern "C" {
 #endif // __cplusplus
 
-// PMODEW is needed for the Irqs to work (Keyboard, GetTicks()) (not in Dos4gw)
-
 void SDL_SetBiosCursor(int x, int y) {
-    union REGS regs;
-    regs.x.eax = 0x200;
-    regs.h.bh = 0;
-    regs.h.dl = (unsigned char)(x&255);
-    regs.h.dh = (unsigned char)(y&255);
-    int386(0x10, &regs, &regs);
+    union REGS r;
+    memset(&r,0,sizeof(r));
+    r.x.eax = 0x200;
+    r.h.bh = 0;
+    r.h.dl = (unsigned char)(x&255);
+    r.h.dh = (unsigned char)(y&255);
+    int386(0x10, &r, &r);
 }
+
+#define SDL_DPMIERROR {glDone(); printf("SDLError: No appropiate DPMI service.\n Maybe use PModeW at linking instead of Dos4GW.\n");exit(0);}
 
 #if defined(SDL_USETIMERIRQ) && (!defined(__DJGPP__))
 static volatile double timerSeconds = 0;
@@ -54,6 +55,7 @@ static void (__interrupt __far timerIrqHandler) (void)
 static void uninstallTimerIrq() {
   if (oldTimerIrqHandler != NULL) {
     union REGS r;
+    memset(&r,0,sizeof(r));
     outp(0x43,0x36);
     outp(0x40,0x00);
     outp(0x40,0x00);
@@ -62,6 +64,7 @@ static void uninstallTimerIrq() {
     r.x.ecx = FP_SEG(oldTimerIrqHandler);
     r.x.edx = FP_OFF(oldTimerIrqHandler);
     int386 (0x31, &r, &r);
+    if (r.w.cflag) SDL_DPMIERROR;
     oldTimerIrqHandler = NULL;
   }
 }
@@ -71,9 +74,10 @@ static void installTimerIrq() {
     timerSeconds=0;
     timerIrqPos=0;
     union REGS r;
+    memset(&r,0,sizeof(r));
     r.x.eax = 0x204;
     r.h.bl = 0x08;
-    int386(0x31, &r, &r);
+    int386 (0x31, &r, &r);
     oldTimerIrqHandler = (TimerIrqHandler)MK_FP(r.x.ecx,r.x.edx);
     int here = 65536/TIMER_MULTIPLICATOR;
     r.x.eax = 0x205;
@@ -81,6 +85,7 @@ static void installTimerIrq() {
     r.x.ecx = FP_SEG(timerIrqHandler);
     r.x.edx = FP_OFF(timerIrqHandler);
     int386 (0x31, &r, &r);
+    if (r.w.cflag) SDL_DPMIERROR;
     outp(0x43,0x36);
     outp(0x40,here & 255);
     outp(0x40,(here>>8) & 255);
@@ -116,11 +121,13 @@ static void (__interrupt __far keyboardHandler) (void) {
 void uninstallKeyboardHandler() {
   if (oldKeyboardHandler != NULL) {
     union REGS r;
+    memset(&r,0,sizeof(r));
     r.w.ax = 0x205;
     r.h.bl = 0x09;
     r.x.ecx = FP_SEG(oldKeyboardHandler);
     r.x.edx = FP_OFF(oldKeyboardHandler);
     int386 (0x31, &r, &r);
+    if (r.w.cflag) SDL_DPMIERROR;
     oldKeyboardHandler = NULL;
   }
 }
@@ -129,15 +136,18 @@ void installKeyboardHandler() {
   if (oldKeyboardHandler != NULL)
     uninstallKeyboardHandler();
   union REGS r;
+  memset(&r,0,sizeof(r));
   r.w.ax = 0x204;
   r.h.bl = 0x09;
   int386 (0x31, &r, &r);
   oldKeyboardHandler = (KeyboardHandler)MK_FP(r.x.ecx,r.x.edx);
+  memset(&r,0,sizeof(r));
   r.w.ax = 0x205;
   r.h.bl = 0x09;
   r.x.ecx = FP_SEG(keyboardHandler);
   r.x.edx = FP_OFF(keyboardHandler);
   int386 (0x31, &r, &r);
+  if (r.w.cflag) SDL_DPMIERROR;
   atexit(uninstallKeyboardHandler);
 }
 
