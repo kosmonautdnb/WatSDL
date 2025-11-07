@@ -1,6 +1,8 @@
 # WatSDL
 Some functions for emulating the SDL2 on FreeDos / WatcomC++  
 
+**You need PMODEW(in the zip) instead of the standard WatcomC Dos4GW in order to get the keyboard and timers working, PMODEW also features 256MB of memory instead of the 32MB of Dos4GW**
+
 SDL (Simple DirectMedia Layer) original repository:  
 https://github.com/libsdl-org/SDL.git  
   
@@ -24,8 +26,6 @@ https://github.com/calmopyrin/yapesdl.git
 
 Raptor is also included (the SDL Reverse Engineered Port by skynettx not the original DOS Raptor in his repositories.)
 https://github.com/skynettx/raptor
-
-**You need PMODEW(in the zip) instead of Dos4gw in order to get the keyboard and timers working**
 
 This repository lives at:  
 https://github.com/kosmonautdnb/WatSDL
