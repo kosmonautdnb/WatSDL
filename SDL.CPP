@@ -151,6 +151,159 @@ void installKeyboardHandler() {
   atexit(uninstallKeyboardHandler);
 }
 
+// ------------ DOS Long FileName Handling ---------------
+
+#define SDL_DosErrorCode errno
+
+typedef struct {
+  Uint16 selector; // for protected mode
+  Uint16 segment; // for 16 bit dos mode (offset is 0)
+  void *ptr; // flat mode memory to write to
+} SDL_DOSPOINTER;
+
+typedef struct {
+  Uint16 di;
+  Uint16 si;
+  Uint16 bp;
+  Uint16 reserved;
+  Uint16 bx;
+  Uint16 dx;
+  Uint16 cx;
+  Uint16 ax;
+  Uint16 es,ds,fs,gs,ip,cs,sp,ss;
+  bool cflag;
+} SDL_REGS16;
+
+SDL_DOSPOINTER SDL_DosNullPointer() {
+  SDL_DOSPOINTER k;
+  memset(&k,0,sizeof(k));
+  k.selector = 0;
+  k.segment = 0;
+  k.ptr = NULL;
+  return k;
+}
+
+SDL_DOSPOINTER SDL_MakeDosPointer(Uint16 selector, Uint16 segment) {
+  SDL_DOSPOINTER k;
+  memset(&k,0,sizeof(k));
+  k.selector = selector;
+  k.segment = segment;
+  k.ptr = (void*)((unsigned int)segment * 16);
+  return k;
+}
+
+SDL_DOSPOINTER SDL_DosMalloc(Uint32 size) {
+  union REGS regs;
+  memset(&regs,0,sizeof(regs));
+  regs.w.ax = 0x100;
+  regs.w.bx = (size+15)/16;
+  regs.w.cflag = false;
+  int386(0x31, &regs, &regs);
+  if (regs.w.cflag) {
+    SDL_DosErrorCode = regs.w.ax;
+    return SDL_DosNullPointer();
+  }
+  return SDL_MakeDosPointer(regs.w.dx,regs.w.ax);
+}
+
+bool SDL_DosFree(const SDL_DOSPOINTER &mem) {
+  union REGS regs;
+  memset(&regs,0,sizeof(regs));
+  regs.w.ax = 0x101;
+  regs.w.dx = mem.selector;
+  regs.w.cflag = false;
+  int386(0x31, &regs, &regs);
+  if (regs.w.cflag) {
+    SDL_DosErrorCode = regs.w.ax;
+    return false;
+  }
+  return true;
+}
+
+typedef struct {
+  long edi;
+  long esi;
+  long ebp;
+  long reserved;
+  long ebx;
+  long edx;
+  long ecx;
+  long eax;
+  short flags;
+  short es,ds,fs,gs,ip,cs,sp,ss;
+} SDL_RMREGS16;
+
+Uint16 SDL_DosInt386x(Uint32 intno, SDL_REGS16 *in, SDL_REGS16 *out) {
+  SDL_RMREGS16 rmregs;
+  union REGS r;
+  struct SREGS sr;
+  memset(&rmregs,0,sizeof(rmregs));
+  memset(&r,0,sizeof(r));
+  memset(&sr,0,sizeof(sr));
+  segread(&sr);
+  sr.es = sr.ds; // flat model?
+  rmregs.eax = in->ax; 
+  rmregs.ebx = in->bx; 
+  rmregs.ecx = in->cx; 
+  rmregs.edx = in->dx; 
+  rmregs.esi = in->si; 
+  rmregs.edi = in->di; 
+  rmregs.ds = in->ds;
+  rmregs.es = in->es;
+  rmregs.flags = in->cflag ? 0x01 : 0x00;
+  r.w.ax = 0x300;
+  r.h.bl = intno;
+  r.h.bh = 0;
+  r.w.cx = 0;
+  r.x.edi = (unsigned)&rmregs;
+  int386x(0x31,&r,&r,&sr);
+  out->ax = rmregs.eax; 
+  out->bx = rmregs.ebx; 
+  out->cx = rmregs.ecx; 
+  out->dx = rmregs.edx; 
+  out->si = rmregs.esi; 
+  out->di = rmregs.edi; 
+  out->es = rmregs.es;
+  out->cs = rmregs.cs;
+  out->ss = rmregs.ss;
+  out->ds = rmregs.ds;
+  out->cflag = (rmregs.flags & 0x01) ? true : false;
+  return out->ax;
+}
+
+bool SDL_Path(char *name, const char *fileName, bool longPath) {
+  SDL_DOSPOINTER dosInterfaceMemory1 = SDL_DosMalloc(strlen(fileName)+1);  if (dosInterfaceMemory1.ptr == NULL) return false; memcpy((char*)dosInterfaceMemory1.ptr,fileName,strlen(fileName)+1);
+  SDL_DOSPOINTER dosInterfaceMemory2 = SDL_DosMalloc(SDL_MAX_LFN_PATH);  if (dosInterfaceMemory2.ptr == NULL) {SDL_DosFree(dosInterfaceMemory1);  return false; }
+  SDL_REGS16 regs;
+  memset(&regs,0,sizeof(regs));
+  regs.ax = 0x7160;
+  regs.cx = (longPath ? 2 : 1)+0x100;
+  regs.ds = dosInterfaceMemory1.segment;
+  regs.si = 0;
+  regs.es = dosInterfaceMemory2.segment;
+  regs.di = 0;
+  SDL_DosInt386x(0x21, &regs, &regs);
+  if (regs.cflag) {
+    SDL_DosFree(dosInterfaceMemory1);
+    SDL_DosFree(dosInterfaceMemory2);
+    SDL_DosErrorCode = regs.ax;
+    return false;
+  }
+  memcpy(name,(char*)dosInterfaceMemory2.ptr,strlen((char*)dosInterfaceMemory2.ptr)+1);
+  SDL_DosFree(dosInterfaceMemory1);
+  SDL_DosFree(dosInterfaceMemory2);
+  return true;
+}
+
+bool SDL_LongPath(char *destName, const char *fileName) {
+  return SDL_Path(destName, fileName, true);
+}
+
+bool SDL_ShortPath(char *destName, const char *fileName) {
+  return SDL_Path(destName, fileName,false);
+}
+// -------------------------------------------------------
+
 #define ERROR(__text__) {glDone();printf(__text__);exit(0);}
 #define RDELETE(__a__) {if ((__a__)!=NULL) {free(__a__);__a__=NULL;}}
 #define RALLOC(__type__,__var__) __type__ *__var__ = (__type__*)malloc(sizeof(__type__));memset(__var__,0,sizeof(__type__));
@@ -179,10 +332,12 @@ void *SDL_GL_GetProcAddress(const char *proc) {
 }
 
 SDL_GLContext SDL_GL_CreateContext(SDL_Window *window) {
-  return NULL;
+  RALLOC(void*,r);
+  return (SDL_GLContext)r;
 }
 
 void SDL_GL_DeleteContext(SDL_GLContext context) {
+  RDELETE(context);
 }
 
 void SDL_GL_SwapWindow(SDL_Window *window) {

@@ -96,6 +96,12 @@ static SDLinline double round(const double a) {return floor(a+0.5);}
 
 // -------------------------------
 
+#define SDL_MAX_LFN_PATH 260
+bool SDL_LongPath(char *destName, const char *fileName); // converts a short DOS path to a long DOS path. Needs doslfn.exe called somewhen before.
+bool SDL_ShortPath(char *destName, const char *fileName); // converts a long DOS path to a short DOS path. Needs doslfn.exe called somewhen before.
+
+// -------------------------------
+
 #define SDL_TRUE 1
 #define SDL_FALSE 0
 #define SDL_OK 0 // :mad: additional
