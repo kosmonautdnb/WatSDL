@@ -296,10 +296,12 @@ bool SDL_Path(char *name, const char *fileName, bool longPath) {
 }
 
 bool SDL_LongPath(char *destName, const char *fileName) {
+  memcpy(destName,fileName,strlen(fileName)+1);
   return SDL_Path(destName, fileName, true);
 }
 
 bool SDL_ShortPath(char *destName, const char *fileName) {
+  memcpy(destName,fileName,strlen(fileName)+1);
   return SDL_Path(destName, fileName,false);
 }
 // -------------------------------------------------------
