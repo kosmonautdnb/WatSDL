@@ -959,6 +959,10 @@ Uint8 pressedScanCode(SDL_Scancode s) {
   return 0;
 }
 
+Uint32 SDL_TimeStamp() {
+  return SDL_GetTicks();
+}
+
 bool addKeyboardEvents() {
   int key = glNextKey();
   if (key == GL_VK_END) {
@@ -967,6 +971,7 @@ bool addKeyboardEvents() {
   if (key != 0) {
     if (key < 128 && key >= 32) {
       SDL_Event *v = &events[currentEvent];
+      v->text.timestamp = SDL_TimeStamp();
       v->type = SDL_TEXTINPUT;
       v->text.text[0] = (unsigned char)(key);
       v->text.text[1] = 0;
@@ -978,6 +983,7 @@ bool addKeyboardEvents() {
     if (pressed != scanCode_last[i]) {
       scanCode_last[i] = pressed;
       SDL_Event *v = &events[currentEvent];
+      v->key.timestamp = SDL_TimeStamp();
       v->type = pressed ? SDL_KEYDOWN : SDL_KEYUP;
       v->key.state = pressed ? 1 : 0;
       v->key.keysym.scancode = (SDL_Scancode)i;
@@ -1036,6 +1042,7 @@ bool addMouseEvents() {
     if (buttonPressed != buttonPressed_last[i]) {
       buttonPressed_last[i] = buttonPressed;
       SDL_Event *v = &events[currentEvent];
+      v->button.timestamp = SDL_TimeStamp();
       v->type = buttonPressed ? SDL_MOUSEBUTTONDOWN:SDL_MOUSEBUTTONUP;
       int j = SDL_BUTTON_LEFT;
       switch(i) {
@@ -1052,6 +1059,7 @@ bool addMouseEvents() {
   }
   if (dx!=0||dy!=0) {
     SDL_Event *v = &events[currentEvent];
+    v->motion.timestamp = SDL_TimeStamp();
     v->type = SDL_MOUSEMOTION;
     v->motion.x = sdlMouseX;
     v->motion.y = sdlMouseY;
@@ -1064,6 +1072,7 @@ bool addMouseEvents() {
 
 void addFocusEvent(bool hasNowFocus) {
   SDL_Event *v = &events[currentEvent];
+  v->window.timestamp = SDL_TimeStamp();
   v->type = SDL_WINDOWEVENT;
   v->window.event = hasNowFocus?SDL_WINDOWEVENT_FOCUS_GAINED:SDL_WINDOWEVENT_FOCUS_LOST;
   currentEvent++;
@@ -1071,6 +1080,7 @@ void addFocusEvent(bool hasNowFocus) {
 
 void addResizeEvent() {
   SDL_Event *v = &events[currentEvent];
+  v->window.timestamp = SDL_TimeStamp();
   v->type = SDL_WINDOWEVENT;
   v->window.event = SDL_WINDOWEVENT_RESIZED;
   currentEvent++;
