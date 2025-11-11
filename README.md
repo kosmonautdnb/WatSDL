@@ -24,6 +24,7 @@ https://github.com/calmopyrin/yapesdl.git
 
 Raptor is also included (the SDL Reverse Engineered Port by skynettx not the original DOS Raptor in his repositories.)
 https://github.com/skynettx/raptor
+Raptor is done under **GPLv2** license.  
 
 NeverBall can be found here:  
 https://github.com/Neverball/neverball.git  
