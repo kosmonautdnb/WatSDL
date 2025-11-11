@@ -25,5 +25,7 @@ https://github.com/calmopyrin/yapesdl.git
 Raptor is also included (the SDL Reverse Engineered Port by skynettx not the original DOS Raptor in his repositories.)
 https://github.com/skynettx/raptor
 
+** The timer seems sometimes to be a bit misaligned to the OS file system timer after starting SDL apps. I didn't found a workaround for this, yet. To be done. **
+
 This repository lives at:  
 https://github.com/kosmonautdnb/WatSDL
