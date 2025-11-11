@@ -21,7 +21,8 @@ OpenTyrian is done under the **GPLv2** license.
 And we got YapeSDL up and running. The famous C64/Plus4 emulator now on FreeDOS. But slow due to WatcomC++ and no hardware accelerations.
 
 YapeSDL by Attila Grosz can be found here:  
-https://github.com/calmopyrin/yapesdl.git
+https://github.com/calmopyrin/yapesdl.git  
+YapeSDL is done under the **GPLv2** license.  
 
 Raptor is also included (the SDL Reverse Engineered Port by skynettx not the original DOS Raptor in his repositories.)
 https://github.com/skynettx/raptor  
