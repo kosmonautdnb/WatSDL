@@ -1634,8 +1634,10 @@ GLvoid glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum u
     glSetError(GL_INVALID_VALUE);
     return;
   }
-  if (c->data != NULL) {__FREE(c->data); c->data = NULL;}
-  c->data = __MALLOC(size);
+  if (c->data == NULL || size != c->dataSize) {
+    if (c->data != NULL) {__FREE(c->data); c->data = NULL;}
+    c->data = __MALLOC(size);
+  }
   memset(c->data,0,size);
   c->dataSize = size;
   glBufferSubData(target,0,size,data);
@@ -2909,14 +2911,16 @@ GLvoid glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei wi
   if (glContext.boundTextures[glContext.activeTexture] == 0) 
     return;
   glTexture *t = &glTextures[glContext.boundTextures[glContext.activeTexture]];
-  if (t->data != NULL)  {
-    __FREE(t->data);
-    t->data = NULL;
-  }
-  t->data = (GLuint*)__MALLOC(sizeof(GLuint)*width*height);
-  if (t->data == NULL) {
-    glSetError(GL_OUT_OF_MEMORY);
-    return;
+  if (t->data == NULL || t->width != width || t->height != height) {
+    if (t->data != NULL)  {
+      __FREE(t->data);
+      t->data = NULL;
+    }
+    t->data = (GLuint*)__MALLOC(sizeof(GLuint)*width*height);
+    if (t->data == NULL) {
+      glSetError(GL_OUT_OF_MEMORY);
+      return;
+    }
   }
   t->width = width;
   t->height = height;
@@ -4550,6 +4554,7 @@ GLvoid glDrawTrianglePrecise(_GLContext *context,glVertex *v0,glVertex *v1,glVer
   GLboolean maskBlue = context->maskBlue;
   GLboolean maskAlpha = context->maskAlpha;
   GLboolean notMasked = maskRed && maskGreen && maskBlue && maskAlpha;
+  GLboolean fullyMasked = (!maskRed) && (!maskGreen) && (!maskBlue) && (!maskAlpha);
 
   GLdouble v0w = 1.0/(v0->sw);
   GLdouble v1w = 1.0/(v1->sw);
@@ -4937,6 +4942,7 @@ GLvoid glDrawTrianglePrecise(_GLContext *context,glVertex *v0,glVertex *v1,glVer
   const GLint stencilOpZFail = (GLint)context->stencilOpZFail;
   const GLint stencilOpZPass = (GLint)context->stencilOpZPass;
   const GLboolean stencilFullReplace = (stencilWriteMask==255)&&(context->stencilFunc == GL_ALWAYS)&&(context->stencilOpFail == GL_REPLACE)&&(context->stencilOpZFail == GL_REPLACE)&&(context->stencilOpZPass == GL_REPLACE);
+  const GLboolean dontWriteAnything = (!writeDepth) && fullyMasked;
 
   glDontPaint = GL_FALSE;
   __PAINTPOLYQUAD_BEGINY__
@@ -4957,6 +4963,14 @@ GLvoid glDrawTrianglePrecise(_GLContext *context,glVertex *v0,glVertex *v1,glVer
           GLubyte *stencilHere = &sDest[x];
           if (stencilFullReplace) {
             *stencilHere = stencilRef;
+            if (dontWriteAnything) {
+              pDest++;
+              zDest++;
+              bary0+=baryAdd0;
+              bary1+=baryAdd1;
+              bary2+=baryAdd2;
+              continue; // !ATTENTION!
+            }
           } else { // stencilFullReplace
             switch(stencilFunc) {
             case GL_NEVER: {stencilPassed = GL_FALSE;} break;
@@ -4975,6 +4989,14 @@ GLvoid glDrawTrianglePrecise(_GLContext *context,glVertex *v0,glVertex *v1,glVer
                   glApplyStencileOp(stencilOpZPass,stencilHere,stencilWriteMask,stencilRef);
                 else
                   glApplyStencileOp(stencilOpZFail,stencilHere,stencilWriteMask,stencilRef);
+              }
+              if (dontWriteAnything) {
+                pDest++;
+                zDest++;
+                bary0+=baryAdd0;
+                bary1+=baryAdd1;
+                bary2+=baryAdd2;
+                continue; // !ATTENTION!
               }
             } else { // stencilPassed
               glApplyStencileOp(stencilOpFail,stencilHere,stencilWriteMask,stencilRef);
@@ -5428,6 +5450,29 @@ GLuint *glGetTexturePointer(GLuint textureId) {
   glTexture *t = &glTextures[textureId];
   if (t->name == 0x00) return NULL;
   return t->data;
+}
+
+GLuint glDebugColors[8]={
+  0x00000000,
+  0x00fffffff,
+  0x000000ff,
+  0x0000ff00,
+  0x00ff0000,
+  0x00ff00ff,
+  0x0000ffff,
+  0x00ffff00
+};
+
+GLvoid glDebug(GLuint color) {
+#ifdef __WATCOMC__
+  if (glFrameBufferDedicated != NULL) {
+    for (int y = 0; y < 8; y++) {
+      for (int x = 0; x < 8; x++) {
+        glFrameBufferDedicated[x+y*glFrameBufferWidth]=glDebugColors[color & 7];
+      }
+    }
+  }
+#endif
 }
 
 GLvoid glCleanSetup(GLuint width, GLuint height, GLuint *frameBuffer, GLfloat *depthBuffer, GLubyte *stencilBuffer) {

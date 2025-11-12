@@ -312,6 +312,7 @@ bool SDL_ShortPath(char *destName, const char *fileName) {
 #define _RALLOC(__type__,__size__) (__type__*)malloc(sizeof(__type__)*(__size__));
 
 unsigned int sdl_initialized = 0;
+double sdl_constant_time = 0;
 
 SDL_Result SDL_GL_SetAttribute(SDL_GLattr attr, int value) {
   return SDL_ERROR;
@@ -344,6 +345,9 @@ void SDL_GL_DeleteContext(SDL_GLContext context) {
 
 void SDL_GL_SwapWindow(SDL_Window *window) {
   glRefresh();
+#ifdef SDL_CONSTANT_TICK_DURATION
+  sdl_constant_time += SDL_CONSTANT_TICK_DURATION;
+#endif
 }
 
 void SDL_SetWindowGrab(SDL_Window *window, bool grabbed) {
@@ -655,7 +659,11 @@ void SDL_GameControllerClose(SDL_GameController *gamecontroller) {
 }
 
 Uint32 SDL_GetTicks() {
+#ifdef SDL_CONSTANT_TICK_DURATION
+  return (Uint32)(sdl_constant_time*1000.0);
+#else
   return (Uint32)(SDL_GetSeconds()*1000.0);
+#endif
 }
 
 SDL_Event events[256];
@@ -1494,6 +1502,9 @@ SDL_Result SDL_RenderClear(SDL_Renderer *renderer) {
 
 void SDL_RenderPresent(SDL_Renderer *renderer) {
   glRefresh();
+#ifdef SDL_CONSTANT_TICK_DURATION
+  sdl_constant_time += SDL_CONSTANT_TICK_DURATION;
+#endif
 }
 
 SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {

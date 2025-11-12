@@ -112,6 +112,7 @@ typedef int SDL_Result; // :mad: additional
 #define SDL_FLT_EPSILON 0.00001
 #define SDLCALL 
 #define SDL_assert(__x__) // :mad: todo
+//#define SDL_CONSTANT_TICK_DURATION (1.0/30.0)
 
 typedef struct SDL_GUID {
     Uint8 data[16];
