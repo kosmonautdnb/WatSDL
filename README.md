@@ -1,4 +1,4 @@
-w# WatSDL
+# WatSDL
 Some functions for emulating the SDL2 on FreeDos / WatcomC++  
 
 SDL (Simple DirectMedia Layer) original repository:  
