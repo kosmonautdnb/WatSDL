@@ -34,6 +34,7 @@ void SDL_SetBiosCursor(int x, int y) {
 #define SDL_DPMIERROR {glDone(); printf("SDLError: No appropiate DPMI service.\n Maybe use PModeW at linking.\n");exit(0);}
 
 #if defined(SDL_USETIMERIRQ) && (!defined(__DJGPP__))
+
 static volatile double timerSeconds = 0;
 static volatile int timerIrqPos = 0;
 typedef void (__interrupt __far* TimerIrqHandler)();

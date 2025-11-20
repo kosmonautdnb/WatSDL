@@ -38,7 +38,7 @@ int main(int argc, const char **argv) {
     glClearColor(0.2,0.4,0.6,1); glClearDepth(1.0); glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION); glLoadIdentity(); gluPerspective(90.0,16.0/9.0,0.1,100.0);
     glMatrixMode(GL_MODELVIEW); glLoadIdentity(); gluLookAt(0,0,0,0,0,-1,0,1,0);
-    glTranslatef(0,0,-1); glRotatef(glSeconds()*40.0,0,0.5,1);
+    glTranslatef(0,0,-1); glRotatef(glSeconds()*40.0,0,0.5,1); // glSeconds() is stuttery on WatcomC++
     glBegin(GL_QUADS);
     glTexCoord2f(1,0); glColor4f(1,0,0,1); glVertex3f(1,1,-1);
     glTexCoord2f(0,0); glColor4f(0,1,0,1); glVertex3f(-1,1,-1);
@@ -113,6 +113,7 @@ extern GLboolean glVGACheckered; // glVGA() with "dithering", default GL_FALSE
 extern GLboolean glWaitVSync; // to achieve better "double buffer" enable this. Use this with care, since this is a VGA function and not Vesa, default GL_FALSE 
 extern GLint glFastTextureSpanWidth;
 extern GLenum glError;
+extern GLint glDrawnTrianglesFrame;
 
 // ------------------------
 // ------------------------
@@ -123,6 +124,7 @@ GLvoid glConfigureAntiAlias(); // to be called before any other gl call (also gl
 // ------------------------
 // ------------------------
 
+GLboolean glWatcomPrecisionTimer(GLboolean enable); // removes stutteryness of WatcomC timer by using the CPUs Time Stamp Counter instead of the 18.2hz clock (calling this needs 1 or 2 seconds to setup)
 GLdouble glSeconds(); // seconds elapsed since the start of OpenGL (it's quite stuttery on WatcomC)
 GLvoid glSetTime(GLdouble seconds); // sets the time (in seconds)
                         
@@ -137,6 +139,9 @@ GLuint glGetTextureHeight(GLuint textureId);
 GLvoid glExplicitAlpha(GLboolean useExplicitAlpha, GLfloat alpha); // writes this alpha to the framebuffer when rendering polygons (maybe helps as some sort of "stencil buffer") // alpha between 0 and 1
 GLboolean glPixel(GLboolean newXYZ, GLfloat xp, GLfloat yp, GLfloat GLzp, GLint x, GLint y, GLuint color); // paint pixel at 3d position (x,y,z) plus 2D offset (x,y) (returns GL_FALSE if clipped) (newXYZ calculates new 3d/2d pos from xp,yp,zp, without it, it will take just the last one)
 GLvoid glAdditionalPointSpriteXStretch(GLfloat widthStretch); // for better (quadratic) point sprites and lines on e.g. 16:9 screens
+
+void *glMalloc(GLsizei size); // aligns the mallocs to 4 byte boundaries. The size is incremented by 8 byte to store a void * at start of the malloced memory.
+void glFree(void *mem); // the mem must have been allocated with glMalloc().
 
 // ------------------------
 // ------------------------
@@ -249,6 +254,7 @@ GLvoid glPushMatrix(); // supported
 GLvoid glRasterPos3f(GLfloat x, GLfloat y, GLfloat z);
 GLvoid glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels); // supported
 GLvoid glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z); // supported
+GLvoid glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z); // supported
 GLvoid glScalef(GLfloat x, GLfloat y, GLfloat z); // supported
 GLvoid glScalefv(const GLfloat *v); // supported
 GLvoid glScaled(GLdouble x, GLdouble y, GLdouble z); // supported
@@ -479,6 +485,8 @@ GLint gluProjectx(GLdouble objX, GLdouble objY, GLdouble objZ, GLdouble *model, 
 #define GL_VK_U_CTRL 21
 #define GL_VK_X_CTRL 24
 #define GL_VK_PLUS_CTRL 29
+#define GL_FRAMEBUFFER 0x8f64
+#define GL_FRAMEBUFFER_COMPLETE 0x8cd5
 #define GL_CLIP_PLANE0 (0x3000+0x20) // :modified:
 #define GL_CLIP_PLANE1 (0x3001+0x20) // :modified:
 #define GL_CLIP_PLANE2 (0x3002+0x20) // :modified:
@@ -861,8 +869,6 @@ GLint gluProjectx(GLdouble objX, GLdouble objY, GLdouble objZ, GLdouble *model, 
 // ------------------------
 // ------------------------
 
-// better use glTexImage2D()
-GLvoid glTexturePointer(GLint width, GLint height, GLuint *textureData);  // glBindTexture() must be called before
 GLuint *glGetTexturePointer(GLuint textureId);
 
 // ------------------------
