@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <i86.h>
+#include <dos.h>
 #include <string.h>
 
 #ifdef __cplusplus
@@ -30,8 +31,6 @@ void SDL_SetBiosCursor(int x, int y) {
     r.h.dh = (unsigned char)(y&255);
     int386(0x10, &r, &r);
 }
-
-#define SDL_DPMIERROR {glDone(); printf("SDLError: No appropiate DPMI service.\n Maybe use PModeW at linking.\n");exit(0);}
 
 #if defined(SDL_USETIMERIRQ) && (!defined(__DJGPP__))
 
@@ -70,14 +69,7 @@ static void (__interrupt __far keyboardHandler) (void) {
 
 void uninstallKeyboardHandler() {
   if (oldKeyboardHandler != NULL) {
-    union REGS r;
-    memset(&r,0,sizeof(r));
-    r.w.ax = 0x205;
-    r.h.bl = 0x09;
-    r.x.ecx = FP_SEG(oldKeyboardHandler);
-    r.x.edx = FP_OFF(oldKeyboardHandler);
-    int386 (0x31, &r, &r);
-    if (r.w.cflag) SDL_DPMIERROR;
+    _dos_setvect(0x09,oldKeyboardHandler);
     oldKeyboardHandler = NULL;
   }
 }
@@ -85,19 +77,8 @@ void uninstallKeyboardHandler() {
 void installKeyboardHandler() {
   if (oldKeyboardHandler != NULL)
     uninstallKeyboardHandler();
-  union REGS r;
-  memset(&r,0,sizeof(r));
-  r.w.ax = 0x204;
-  r.h.bl = 0x09;
-  int386 (0x31, &r, &r);
-  oldKeyboardHandler = (KeyboardHandler)MK_FP(r.x.ecx,r.x.edx);
-  memset(&r,0,sizeof(r));
-  r.w.ax = 0x205;
-  r.h.bl = 0x09;
-  r.x.ecx = FP_SEG(keyboardHandler);
-  r.x.edx = FP_OFF(keyboardHandler);
-  int386 (0x31, &r, &r);
-  if (r.w.cflag) SDL_DPMIERROR;
+  oldKeyboardHandler = _dos_getvect(0x09);
+  _dos_setvect(0x09,keyboardHandler);
   atexit(uninstallKeyboardHandler);
 }
 
