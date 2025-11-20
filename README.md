@@ -38,7 +38,5 @@ https://github.com/Neverball/neverball/releases/tag/1.7.0-alpha.3  (you'll need 
 NeverBall is actually not meant to be compiled this way, use the above original repositories link to compile it on Windows,MacOS, Linux and alikes. I hope the authors don't oppose this DOS compile here.  
 NeverBall is done under the **GPLv2 and MIT** license.  
 
-**The timer seems sometimes to be a bit misaligned to the OS file system timer after starting SDL apps. I didn't found a workaround for this, yet. To be done.**
-
 This repository lives at:  
 https://github.com/kosmonautdnb/WatSDL
