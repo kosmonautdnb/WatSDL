@@ -93,8 +93,9 @@ void installKeyboardHandler() {
 #ifdef __DJGPP__
 #define LOCK_VARIABLE(x) _go32_dpmi_lock_data((void*)&x,(long)sizeof(x));
 #define LOCK_FUNCTION(x,__s__) _go32_dpmi_lock_code((void*)x,(long)__s__);
-_go32_dpmi_seginfo old_keyboard_handler;
-_go32_dpmi_seginfo new_keyboard_handler;
+static _go32_dpmi_seginfo old_keyboard_handler;
+static _go32_dpmi_seginfo new_keyboard_handler;
+static bool keyboard_handler_installed = false;
 
 static void keyboardHandler() {
   unsigned char key = (unsigned char)inp(0x60);
@@ -102,11 +103,17 @@ static void keyboardHandler() {
 }
 
 void uninstallKeyboardHandler() {
-  _go32_dpmi_set_protected_mode_interrupt_vector(0x09,&old_keyboard_handler);
+  if (keyboard_handler_installed) {
+    keyboard_handler_installed = false;
+    _go32_dpmi_set_protected_mode_interrupt_vector(0x09,&old_keyboard_handler);
+  }
 }
 
 void installKeyboardHandler() {
+  if (keyboard_handler_installed) 
+    uninstallKeyboardHandler();
   _go32_dpmi_get_protected_mode_interrupt_vector(0x09,&old_keyboard_handler); 
+  keyboard_handler_installed = true;
   new_keyboard_handler.pm_offset = (unsigned long)keyboardHandler;
   new_keyboard_handler.pm_selector = _go32_my_cs();
   _go32_dpmi_chain_protected_mode_interrupt_vector(0x09,&new_keyboard_handler);
