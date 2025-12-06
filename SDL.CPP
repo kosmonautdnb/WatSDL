@@ -14,7 +14,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <conio.h>
+#ifdef __WATCOMC__
 #include <i86.h>
+#endif // __WATCOMC__
+#ifdef __DJGPP__
+#include <cerrno>
+#include <dpmi.h>
+#include <go32.h>
+#endif // __DJGPP__
 #include <dos.h>
 #include <string.h>
 
@@ -25,7 +32,7 @@ extern "C" {
 void SDL_SetBiosCursor(int x, int y) {
     union REGS r;
     memset(&r,0,sizeof(r));
-    r.x.eax = 0x200;
+    r.w.ax = 0x200;
     r.h.bh = 0;
     r.h.dl = (unsigned char)(x&255);
     r.h.dh = (unsigned char)(y&255);
@@ -52,15 +59,15 @@ void SDL_SetSeconds(double s) {glSetTime(s);}
 double SDL_GetSeconds() {return glSeconds();}
 #endif // SDL_USETIMERIRQ
 
-typedef void (__interrupt __far* KeyboardHandler)();
-static KeyboardHandler oldKeyboardHandler = NULL;
-
 Uint8 volatile keyPressed[0x100] = {0};
 
 Uint8 isKeyPressed(int scanCode) {
   return keyPressed[scanCode & 0x7f];
 }
 
+#ifdef __WATCOMC__
+typedef void (__interrupt __far* KeyboardHandler)();
+static KeyboardHandler oldKeyboardHandler = NULL;
 static void (__interrupt __far keyboardHandler) (void) {
   unsigned char key = (unsigned char)inp(0x60);
   keyPressed[key & 0x7f] = key & 0x80 ? false : true;
@@ -81,9 +88,36 @@ void installKeyboardHandler() {
   _dos_setvect(0x09,keyboardHandler);
   atexit(uninstallKeyboardHandler);
 }
+#endif
+
+#ifdef __DJGPP__
+#define LOCK_VARIABLE(x) _go32_dpmi_lock_data((void*)&x,(long)sizeof(x));
+#define LOCK_FUNCTION(x,__s__) _go32_dpmi_lock_code((void*)x,(long)__s__);
+_go32_dpmi_seginfo old_keyboard_handler;
+_go32_dpmi_seginfo new_keyboard_handler;
+
+static void keyboardHandler() {
+  unsigned char key = (unsigned char)inp(0x60);
+  keyPressed[key & 0x7f] = key & 0x80 ? false : true;
+}
+
+void uninstallKeyboardHandler() {
+  _go32_dpmi_set_protected_mode_interrupt_vector(0x09,&old_keyboard_handler);
+}
+
+void installKeyboardHandler() {
+  _go32_dpmi_get_protected_mode_interrupt_vector(0x09,&old_keyboard_handler); 
+  new_keyboard_handler.pm_offset = (unsigned long)keyboardHandler;
+  new_keyboard_handler.pm_selector = _go32_my_cs();
+  _go32_dpmi_chain_protected_mode_interrupt_vector(0x09,&new_keyboard_handler);
+  LOCK_FUNCTION(keyboardHandler,100);
+  LOCK_VARIABLE(keyPressed);
+  atexit(uninstallKeyboardHandler);
+}
+#endif
 
 // ------------ DOS Long FileName Handling ---------------
-
+#ifdef __WATCOMC__
 #define SDL_DosErrorCode errno
 
 typedef struct {
@@ -235,6 +269,17 @@ bool SDL_ShortPath(char *destName, const char *fileName) {
   memcpy(destName,fileName,strlen(fileName)+1);
   return SDL_Path(destName, fileName,false);
 }
+#else // __WATCOMC__
+bool SDL_LongPath(char *destName, const char *fileName) {
+  memcpy(destName,fileName,strlen(fileName)+1);
+  return false;
+}
+
+bool SDL_ShortPath(char *destName, const char *fileName) {
+  memcpy(destName,fileName,strlen(fileName)+1);
+  return false;
+}
+#endif // __WATCOMC__
 // -------------------------------------------------------
 
 #define ERROR(__text__) {glDone();printf(__text__);exit(0);}
@@ -433,16 +478,22 @@ Uint16 SDL_Swap16(Uint16 a) {
   return (Uint16)((a>>8)|(a<<8));
 }
 
+#ifdef __WATCOMC__
 int snprintf(char *buffer, const int size, const char *format, ...) {
   return sprintf(buffer,format); // :mad: todo
 }
+#endif
 
 char *SDL_GetPrefPath(const char *a, const char *b) {
-  return ".";
+  char *r = (char*)malloc(2);
+  sprintf(r,".");
+  return r;
 }
 
 char *SDL_GetBasePath() {
-  return ".";
+  char *r = (char*)malloc(2);
+  sprintf(r,".");
+  return r;
 }
 
 SDL_Result SDL_Init(Uint32 flags) {
@@ -603,7 +654,7 @@ int currentEvent=0;
 Uint8 scanCode_last[SDL_NUM_SCANCODES] = {0};
 
 Uint8 *SDL_GetKeyboardState(int *numKeys) {
-  *numKeys = sizeof(scanCode_last);
+  if (numKeys != NULL) *numKeys = sizeof(scanCode_last);
   return scanCode_last;
 }
 
@@ -884,8 +935,8 @@ SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {
 Uint8 isDosKeyPressed(int dosCode) {
   Uint8 r=0;
   if (keyPressed[dosCode&0xff]) r = 1;
-  if ((dosCode&SCANCODESHIFT)&&((!(keyPressed[SCANCODE_LSHIFT]))&&(!(keyPressed[SCANCODE_RSHIFT])))) r = 0;
-  if ((dosCode&SCANCODEALT)&&(!(keyPressed[SCANCODE_ALT]))) r = 0;
+  if ((dosCode!=SCANCODE_LSHIFT)&&(dosCode!=SCANCODE_RSHIFT)&&(dosCode&SCANCODESHIFT)&&((!(keyPressed[SCANCODE_LSHIFT]))&&(!(keyPressed[SCANCODE_RSHIFT])))) r = 0;
+  if ((dosCode!=SCANCODE_ALT)&&(dosCode&SCANCODEALT)&&(!(keyPressed[SCANCODE_ALT]))) r = 0;
   return r;
 }
 
@@ -928,12 +979,12 @@ bool addKeyboardEvents() {
       v->key.keysym.scancode = (SDL_Scancode)i;
       v->key.keysym.sym = SDL_GetKeyFromScancode((SDL_Scancode)i);
       v->key.keysym.mod = 0;
-      if (keyPressed[SDL_SCANCODE_LCTRL]) v->key.keysym.mod|=(int)KMOD_LCTRL;
-      if (keyPressed[SDL_SCANCODE_RCTRL]) v->key.keysym.mod|=(int)KMOD_RCTRL;
-      if (keyPressed[SDL_SCANCODE_LALT]) v->key.keysym.mod|=(int)KMOD_LALT;
-      if (keyPressed[SDL_SCANCODE_RALT]) v->key.keysym.mod|=(int)KMOD_RALT;
-      if (keyPressed[SDL_SCANCODE_LSHIFT]) v->key.keysym.mod|=(int)KMOD_LSHIFT;
-      if (keyPressed[SDL_SCANCODE_RSHIFT]) v->key.keysym.mod|=(int)KMOD_RSHIFT;
+      if (pressedScanCode(SDL_SCANCODE_LCTRL)) v->key.keysym.mod|=(int)KMOD_LCTRL;
+      if (pressedScanCode(SDL_SCANCODE_RCTRL)) v->key.keysym.mod|=(int)KMOD_RCTRL;
+      if (pressedScanCode(SDL_SCANCODE_LALT)) v->key.keysym.mod|=(int)KMOD_LALT;
+      if (pressedScanCode(SDL_SCANCODE_RALT)) v->key.keysym.mod|=(int)KMOD_RALT;
+      if (pressedScanCode(SDL_SCANCODE_LSHIFT)) v->key.keysym.mod|=(int)KMOD_LSHIFT;
+      if (pressedScanCode(SDL_SCANCODE_RSHIFT)) v->key.keysym.mod|=(int)KMOD_RSHIFT;
       currentEvent++;
     }
   }
@@ -1052,7 +1103,7 @@ Uint8 SDL_EventState(Uint32 type, int state) {
 }
 
 const char *SDL_GetError() {
-  return "";
+  return (const char*)"";
 }
 
 int SDL_ShowCursor(int toggle) {
@@ -1377,10 +1428,10 @@ bool SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp, Uint32 *Rmask, Uint32 *
     int bs = bits[i];
     int b = ((1 << bs)-1)<<startBit;
     switch(ord[i]) {
-    case 0: if (*Rmask!=NULL) *Rmask=b; sdlRShift=startBit; sdlRBits=bs; break;
-    case 1: if (*Gmask!=NULL) *Gmask=b; sdlGShift=startBit; sdlGBits=bs; break;
-    case 2: if (*Bmask!=NULL) *Bmask=b; sdlBShift=startBit; sdlBBits=bs; break;
-    case 3: if (*Amask!=NULL) *Amask=b; sdlAShift=startBit; sdlABits=bs; break;
+    case 0: if (Rmask!=NULL) *Rmask=b; sdlRShift=startBit; sdlRBits=bs; break;
+    case 1: if (Gmask!=NULL) *Gmask=b; sdlGShift=startBit; sdlGBits=bs; break;
+    case 2: if (Bmask!=NULL) *Bmask=b; sdlBShift=startBit; sdlBBits=bs; break;
+    case 3: if (Amask!=NULL) *Amask=b; sdlAShift=startBit; sdlABits=bs; break;
     }  
     startBit+=bs;
   }
@@ -1661,7 +1712,7 @@ SDL_Result SDL_RenderCopy(SDL_Renderer *renderer, SDL_Texture *texture, const SD
 }
 
 const char *SDL_GetPixelFormatName(Uint32 format) {
-  return "";
+  return (const char*)"";
 }
 
 bool SDL_HasClipboardText() {
@@ -1669,7 +1720,9 @@ bool SDL_HasClipboardText() {
 }
 
 char *SDL_GetClipboardText() {
-  return "";
+  char *r = (char*)malloc(2);
+  sprintf(r,".");
+  return r;
 }
 
 bool SDL_HasScreenKeyboardSupport() {
