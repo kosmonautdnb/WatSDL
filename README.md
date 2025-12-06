@@ -6,6 +6,8 @@ https://github.com/libsdl-org/SDL.git
 
 This SDL2 "port" needs WatcomGL (already included here: GL.H and GLIMPL.CPP) to be found here:  
 https://github.com/kosmonautdnb/WatcomGL.git  
+
+SDL compiles with DJGPP and even with WatcomC++ 11.0 (and of course OpenWatcom).  
   
 Not final, just in the making. And perhaps very clumsy and cheesy at the moment. And justly WatcomC++ 11.0 is twice the slow as DJGPP the heck, too. You need a fast setup for this. (So it's actually just an attempt to convert Tyrian at the moment.) 
 
