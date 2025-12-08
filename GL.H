@@ -20,7 +20,7 @@
 int main(int argc, const char **argv) {
   if (!glVesa(640,480,32))
     glVGA(); // This modus is safe for all VGA cards. It doesn't involve reprogramming of VGA timings.
-
+  
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glEnable(GL_TEXTURE_2D);

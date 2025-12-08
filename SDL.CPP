@@ -65,12 +65,17 @@ Uint8 isKeyPressed(int scanCode) {
   return keyPressed[scanCode & 0x7f];
 }
 
+static void keyboardHandler() {
+  unsigned char key = (unsigned char)inp(0x60);
+  if ((key & 0x7f) != 42) // SCANCODE_LSHIFT, sadly LSHIFT interferes with cursor keys here
+    keyPressed[key & 0x7f] = key & 0x80 ? false : true;
+}
+
 #ifdef __WATCOMC__
 typedef void (__interrupt __far* KeyboardHandler)();
 static KeyboardHandler oldKeyboardHandler = NULL;
-static void (__interrupt __far keyboardHandler) (void) {
-  unsigned char key = (unsigned char)inp(0x60);
-  keyPressed[key & 0x7f] = key & 0x80 ? false : true;
+static void (__interrupt __far newKeyboardHandler) (void) {
+  keyboardHandler();
   oldKeyboardHandler();
 }
 
@@ -85,7 +90,7 @@ void installKeyboardHandler() {
   if (oldKeyboardHandler != NULL)
     uninstallKeyboardHandler();
   oldKeyboardHandler = _dos_getvect(0x09);
-  _dos_setvect(0x09,keyboardHandler);
+  _dos_setvect(0x09,newKeyboardHandler);
   atexit(uninstallKeyboardHandler);
 }
 #endif
@@ -96,11 +101,6 @@ void installKeyboardHandler() {
 static _go32_dpmi_seginfo old_keyboard_handler;
 static _go32_dpmi_seginfo new_keyboard_handler;
 static bool keyboard_handler_installed = false;
-
-static void keyboardHandler() {
-  unsigned char key = (unsigned char)inp(0x60);
-  keyPressed[key & 0x7f] = key & 0x80 ? false : true;
-}
 
 void uninstallKeyboardHandler() {
   if (keyboard_handler_installed) {
