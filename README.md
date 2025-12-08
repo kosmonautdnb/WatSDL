@@ -1,8 +1,6 @@
 # WatSDL
 Some functions for emulating the SDL2 on FreeDos / WatcomC++  
 
-Attention: The left shift key is disabled. The cursor keys did send LeftShift events here (what's a malfunction)..
-
 SDL (Simple DirectMedia Layer) original repository:  
 https://github.com/libsdl-org/SDL.git  
 
