@@ -95,7 +95,7 @@ Uint8 isKeyPressed(int scanCode) {
 #define SCANCODE_ENTER 28
 #define SCANCODE_NUMENTER 28
 #define SCANCODE_PAUSE 29
-#define SCANCODE_CTRL 29
+#define SCANCODE_LCTRL 29
 #define SCANCODE_A 30
 #define SCANCODE_S 31
 #define SCANCODE_D 32
@@ -124,7 +124,7 @@ Uint8 isKeyPressed(int scanCode) {
 #define SCANCODE_RSHIFT 54
 #define SCANCODE_NUMMUL 55
 #define SCANCODE_PRINT 55
-#define SCANCODE_ALT 56
+#define SCANCODE_LALT 56
 #define SCANCODE_SPACE 57
 #define SCANCODE_SHIFTLOCK 58
 #define SCANCODE_F1 59
@@ -166,6 +166,8 @@ Uint8 isKeyPressed(int scanCode) {
 #define SCANCODE_F11 87
 #define SCANCODE_F12 88
 #define SCANCODE_WINDOWS 91
+#define SCANCODE_RALT 110 // :mad: non standard
+#define SCANCODE_RCTRL 111 // :mad: non standard
 
 static int key0xe0 = 0;
 static int key0xe0val = 0;
@@ -183,9 +185,9 @@ static void keyboardHandler() {
     case SCANCODE_UP:
     case SCANCODE_DOWN:
     case SCANCODE_WINDOWS:
-    case SCANCODE_ALT:
-    case SCANCODE_CTRL:
       {key0xe0 = 0;} break; // clear extended message handling here
+    case SCANCODE_LALT: {key = SCANCODE_RALT|(key&0X80); keyPressed[key & 0x7f] = key & 0x80 ? false : true;} break;
+    case SCANCODE_LCTRL: {key = SCANCODE_RCTRL|(key&0X80); keyPressed[key & 0x7f] = key & 0x80 ? false : true;} break;
     }
   }
   if (key0xe0 == 0) {
@@ -875,10 +877,12 @@ void SDL_ResetKeyboard() {
   CONVSC2(SDLK_UP,SDL_SCANCODE_UP,SCANCODE_UP,"UP")\
   CONVSC2(SDLK_NUMLOCKCLEAR,SDL_SCANCODE_NUMLOCKCLEAR,SCANCODE_NUMNUM,"NUMLOCKCLEAR")\
   CONVSC2(SDLK_KP_MINUS,SDL_SCANCODE_KP_MINUS,SCANCODE_NUMMINUS,"KEYPAD MINUS")\
-  CONVSC2(SDLK_LCTRL,SDL_SCANCODE_LCTRL,SCANCODE_CTRL,"LEFT CTRL")\
+  CONVSC2(SDLK_LCTRL,SDL_SCANCODE_LCTRL,SCANCODE_LCTRL,"LEFT CTRL")\
+  CONVSC2(SDLK_RCTRL,SDL_SCANCODE_RCTRL,SCANCODE_RCTRL,"RIGHT CTRL")\
   CONVSC2(SDLK_LSHIFT,SDL_SCANCODE_LSHIFT,SCANCODE_LSHIFT,"LEFT SHIFT")\
-  CONVSC2(SDLK_LALT,SDL_SCANCODE_LALT,SCANCODE_ALT,"ALT")\
   CONVSC2(SDLK_RSHIFT,SDL_SCANCODE_RSHIFT,SCANCODE_RSHIFT,"RIGHT SHIFT")\
+  CONVSC2(SDLK_LALT,SDL_SCANCODE_LALT,SCANCODE_LALT,"LEFT ALT")\
+  CONVSC2(SDLK_RALT,SDL_SCANCODE_RALT,SCANCODE_RALT,"RIGHT ALT")\
   CONVSC2(SDLK_KP_5,SDL_SCANCODE_KP_5,SCANCODE_NUM5,"KEYPAD 5")\
   CONVSC2(SDLK_KP_MULTIPLY,SDL_SCANCODE_KP_MULTIPLY,SCANCODE_NUMMUL,"KEYPAD MUL")\
   CONVSC2(SDLK_PERIOD,SDL_SCANCODE_PERIOD,SCANCODE_DOT,"PERIOD")
@@ -963,9 +967,18 @@ SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode) {
 
 Uint8 isDosKeyPressed(int dosCode) {
   Uint8 r=0;
-  if (keyPressed[dosCode&0xff]) r = 1;
-  if ((dosCode!=SCANCODE_LSHIFT)&&(dosCode!=SCANCODE_RSHIFT)&&(dosCode&SCANCODESHIFT)&&((!(keyPressed[SCANCODE_LSHIFT]))&&(!(keyPressed[SCANCODE_RSHIFT])))) r = 0;
-  if ((dosCode!=SCANCODE_ALT)&&(dosCode&SCANCODEALT)&&(!(keyPressed[SCANCODE_ALT]))) r = 0;
+  if (keyPressed[dosCode & 0xff]) r = 1;
+
+  if ( (dosCode != SCANCODE_LSHIFT) && (dosCode != SCANCODE_RSHIFT) ) {
+    const bool shiftPressed = keyPressed[SCANCODE_LSHIFT] | keyPressed[SCANCODE_RSHIFT];
+    if ( (dosCode & SCANCODESHIFT) && (!shiftPressed) ) r = 0;
+  }
+
+  if ( (dosCode != SCANCODE_LALT) && (dosCode != SCANCODE_RALT) ) {
+    const bool altPressed = keyPressed[SCANCODE_LALT] | keyPressed[SCANCODE_RALT];
+    if ( (dosCode & SCANCODEALT) && (!altPressed) ) r = 0;
+  }
+
   return r;
 }
 
