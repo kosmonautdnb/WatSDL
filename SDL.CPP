@@ -8,6 +8,7 @@
 // it's just a first attempt to get the game OpenTyrian running on FreeDOS with WatcomC++ 11
 // you don't need other SDL header files just include this
 // and maybe this will evolve further from a Tyrian implementation wrapper to a more usable SDL
+// this "SDL" emulation doesn't feature all commands of the original SDL2, atleast SDLRaptor/SDLTyrian/YapeSDL work without any modifications.
 // --
 #include "sdl.h"
 #include "gl.h"
@@ -172,7 +173,7 @@ Uint8 isKeyPressed(int scanCode) {
 // 126 is reserved
 // 127 is reserved
 
-#define NONSTANDARDKEY(__h__) {key = (__h__)|(key&0X80); keyPressed[key & 0x7f] = key & 0x80 ? false : true;} break;
+#define NONSTANDARDKEY(__h__) {key = (unsigned char)((__h__)|(key&0X80)); keyPressed[key & 0x7f] = key & 0x80 ? false : true;} break;
 static int key0xe0 = 0;
 static int key0xe0val = 0;
 static bool keyWasPause = false;
@@ -315,7 +316,7 @@ SDL_DOSPOINTER SDL_DosMalloc(Uint32 size) {
   union REGS regs;
   memset(&regs,0,sizeof(regs));
   regs.w.ax = 0x100;
-  regs.w.bx = (size+15)/16;
+  regs.w.bx = (Uint16)((size+15)/16);
   regs.w.cflag = false;
   int386(0x31, &regs, &regs);
   if (regs.w.cflag) {
@@ -371,21 +372,21 @@ Uint16 SDL_DosInt386x(Uint32 intno, SDL_REGS16 *in, SDL_REGS16 *out) {
   rmregs.es = in->es;
   rmregs.flags = in->cflag ? 0x01 : 0x00;
   r.w.ax = 0x300;
-  r.h.bl = intno;
+  r.h.bl = (unsigned char)intno;
   r.h.bh = 0;
   r.w.cx = 0;
   r.x.edi = (unsigned)&rmregs;
   int386x(0x31,&r,&r,&sr);
-  out->ax = rmregs.eax; 
-  out->bx = rmregs.ebx; 
-  out->cx = rmregs.ecx; 
-  out->dx = rmregs.edx; 
-  out->si = rmregs.esi; 
-  out->di = rmregs.edi; 
-  out->es = rmregs.es;
-  out->cs = rmregs.cs;
-  out->ss = rmregs.ss;
-  out->ds = rmregs.ds;
+  out->ax = (unsigned short)(rmregs.eax & 0xffff); 
+  out->bx = (unsigned short)(rmregs.ebx & 0xffff); 
+  out->cx = (unsigned short)(rmregs.ecx & 0xffff); 
+  out->dx = (unsigned short)(rmregs.edx & 0xffff); 
+  out->si = (unsigned short)(rmregs.esi & 0xffff); 
+  out->di = (unsigned short)(rmregs.edi & 0xffff); 
+  out->es = (unsigned short)rmregs.es;
+  out->cs = (unsigned short)rmregs.cs;
+  out->ss = (unsigned short)rmregs.ss;
+  out->ds = (unsigned short)rmregs.ds;
   out->cflag = (rmregs.flags & 0x01) ? true : false;
   return out->ax;
 }
@@ -396,7 +397,7 @@ bool SDL_Path(char *name, const char *fileName, bool longPath) {
   SDL_REGS16 regs;
   memset(&regs,0,sizeof(regs));
   regs.ax = 0x7160;
-  regs.cx = (longPath ? 2 : 1)+0x100;
+  regs.cx = (unsigned short)((longPath ? 2 : 1)+0x100);
   regs.ds = dosInterfaceMemory1.segment;
   regs.si = 0;
   regs.es = dosInterfaceMemory2.segment;
@@ -1513,17 +1514,17 @@ void SDL_FreePalette(SDL_Palette *palette) {
 
 SDL_PixelFormat *SDL_AllocFormat(Uint32 pixel_format) {
   RALLOC(SDL_PixelFormat,r);
-  r->BitsPerPixel = SDL_BYTESPERPIXEL(pixel_format)*8; // sadly this would be 24 for XRGB8888 format
-  r->BytesPerPixel = r->BitsPerPixel/8;
+  r->BitsPerPixel = (Uint8)(SDL_BYTESPERPIXEL(pixel_format)*8); // sadly this would be 24 for XRGB8888 format
+  r->BytesPerPixel = (Uint8)(r->BitsPerPixel/8);
   SDL_PixelFormatEnumToMasks(pixel_format, NULL, &r->Rmask, &r->Gmask, &r->Bmask, &r->Amask);
-  r->Rloss=1<<(8-sdlRBits);
-  r->Gloss=1<<(8-sdlGBits);
-  r->Bloss=1<<(8-sdlBBits);
-  r->Aloss=1<<(8-sdlABits);
-  r->Rshift=sdlRShift;
-  r->Gshift=sdlGShift;
-  r->Bshift=sdlBShift;
-  r->Ashift=sdlAShift;
+  r->Rloss=(Uint8)(1<<(8-sdlRBits));
+  r->Gloss=(Uint8)(1<<(8-sdlGBits));
+  r->Bloss=(Uint8)(1<<(8-sdlBBits));
+  r->Aloss=(Uint8)(1<<(8-sdlABits));
+  r->Rshift=(Uint8)(sdlRShift);
+  r->Gshift=(Uint8)(sdlGShift);
+  r->Bshift=(Uint8)(sdlBShift);
+  r->Ashift=(Uint8)(sdlAShift);
   r->palette=NULL;
   switch(SDL_PIXELTYPE(pixel_format)) {
   case SDL_PIXELTYPE_INDEX8:r->palette=SDL_AllocPalette(256);break;
@@ -1540,7 +1541,13 @@ void SDL_ShowWindow(SDL_Window *window) {
 }
 
 SDL_Result SDL_RenderClear(SDL_Renderer *renderer) {
-  memset(glFrameBuffer,0,glFrameBufferWidth*glFrameBufferHeight*sizeof(unsigned int));
+  unsigned int *dest = glFrameBuffer;
+  int r = sdlDrawColorR; if (r < 0) r = 0; if (r > 255) r = 255;
+  int g = sdlDrawColorG; if (g < 0) g = 0; if (g > 255) g = 255;
+  int b = sdlDrawColorB; if (b < 0) b = 0; if (b > 255) b = 255;
+  int a = sdlDrawColorA; if (a < 0) a = 0; if (a > 255) a = 255;
+  unsigned int col = (r)|(g<<8)|(b<<16)|(a<<24);
+  for (int i = glFrameBufferWidth*glFrameBufferHeight; i > 0 ; i--) *dest++ = col;
   return SDL_OK;
 }
 
@@ -1621,7 +1628,7 @@ SDL_Result SDL_UpperBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, 
           switch(f) {
             case 1*0+2*0:*((unsigned int*)&d[x*4])=*((unsigned int*)&s[sx*4]);break;
             case 1*1+2*0:*((unsigned int*)&d[x*4])=spal[*((unsigned char*)&s[sx])];break;
-            case 1*0+2*1:*((unsigned char*)&d[x])=*((unsigned int*)&s[sx*4]);break;
+            case 1*0+2*1:*((unsigned char*)&d[x])=(unsigned char)(*((unsigned int*)&s[sx*4]));break;
             case 1*1+2*1:*((unsigned char*)&d[x])=*((unsigned char*)&s[sx]);break;
           }
         }

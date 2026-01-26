@@ -8,6 +8,7 @@
 // it's just a first attempt to get the game OpenTyrian running on FreeDOS with WatcomC++ 11
 // you don't need other SDL header files just include this
 // and maybe this will evolve further from a Tyrian implementation wrapper to a more usable SDL
+// this "SDL" emulation doesn't feature all commands of the original SDL2, atleast SDLRaptor/SDLTyrian/YapeSDL work without any modifications.
 // --
 #ifndef __SDL_H__
 #define __SDL_H__
@@ -1616,8 +1617,6 @@ typedef enum SDL_EventType
     SDL_LASTEVENT = 0xFFFF
 } SDL_EventType;
 
-typedef int SDL_TouchID; // :mad: missing
-typedef int SDL_FingerID; // :mad: missing
 typedef int SDL_GestureID; // :mad: missing
 
 typedef struct SDL_CommonEvent
